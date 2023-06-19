@@ -2,5 +2,5 @@ package &package&;
 
 import com.gree.android.develop.mvvm.v.BaseActivity
 
-class ChangeActivity: BaseActivity<,> {
+class &Activity&: BaseActivity<,> {
 }

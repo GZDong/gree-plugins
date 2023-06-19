@@ -6,23 +6,19 @@ import com.intellij.openapi.actionSystem.LangDataKeys
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.Messages
 import org.apache.commons.io.FileUtils
+import java.io.BufferedReader
 import java.io.File
-import java.nio.charset.StandardCharsets
+import java.io.InputStreamReader
+import java.nio.charset.StandardCharsets.UTF_8
 
 class GenerateActivity : AnAction() {
     override fun actionPerformed(event: AnActionEvent) {
         val project = event.project
         val path = LangDataKeys.VIRTUAL_FILE.getData(event.dataContext)?.path
 
-//        val resultCode = Messages.showYesNoCancelDialog(project, "New Template class BaseActivity", "new Class", null)
-//
-//        if (resultCode == 0) {
-//
-//        }
-
         val modelName =
             Messages.showInputDialog(project, "please input model name", "New Class Model", Messages.getQuestionIcon())
-            genModelActivity(path, modelName)
+        genModelActivity(path, modelName)
     }
 
     override fun update(event: AnActionEvent) {
@@ -36,12 +32,8 @@ class GenerateActivity : AnAction() {
         if (path.isNullOrBlank() || name.isNullOrBlank()) {
             return
         }
-        val file = File("$path\\$name.kt")
-        val packageStr = TEMP_PACKAGE.replace("&package&", getPackageName(path))
-        val importStr = TEMP_IMPORT
-        val nameStr = TEMP_ACTIVITY.replace("&name&", name)
-
-        FileUtils.writeStringToFile(file, packageStr + "\n" + "\n" + importStr + "\n" + "\n" + nameStr, StandardCharsets.UTF_8)
+        val file = File("$path/$name.kt")
+        FileUtils.writeStringToFile(file, getInjectContent(path, name), UTF_8)
     }
 
     /**
@@ -51,5 +43,30 @@ class GenerateActivity : AnAction() {
         return path.substring(path.indexOf("java") + 5, path.length).replace("/", ".")
     }
 
+    private fun getInjectContent(path: String, name: String): String {
+        try {
+            val writeContent = StringBuilder("")
+            val tempFileStream = javaClass.getResourceAsStream("/TempActivity.txt")
+            val reader = tempFileStream?.let { InputStreamReader(it) }?.let { BufferedReader(it) }
+            var line: String
+            reader?.run {
+                while ((reader.readLine().also {
+                        line = it ?: ""
+                        if (line.contains("&package&")) {
+                            line = line.replace("&package&", getPackageName(path))
+                        }
+                        if (line.contains("&Activity&")) {
+                            line = line.replace("&Activity&", name)
+                        }
+                    }) != null) {
+                    writeContent.append(line.ifEmpty { "\n" + "\n" })
+                }
+            }
+            return writeContent.toString()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return ""
+        }
+    }
 
 }
