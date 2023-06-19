@@ -1,0 +1,10 @@
+package &package&
+
+import com.gree.android.develop.mvvm.vm.BaseViewModel&n
+import dagger.hilt.android.lifecycle.HiltViewModel&n
+import javax.inject.Inject&n
+
+@HiltViewModel&n
+class &ViewModel& @Inject constructor() : BaseViewModel() {&n
+&n
+}

@@ -17,8 +17,8 @@ class GenerateActivity : AnAction() {
         val path = LangDataKeys.VIRTUAL_FILE.getData(event.dataContext)?.path
 
         val modelName =
-            Messages.showInputDialog(project, "please input model name", "New Class Model", Messages.getQuestionIcon())
-        genModelActivity(path, modelName)
+            Messages.showInputDialog(project, "输入类名", "类名", Messages.getQuestionIcon())
+        genModelActivity(path, modelName, "test/$modelName")
     }
 
     override fun update(event: AnActionEvent) {
@@ -28,12 +28,19 @@ class GenerateActivity : AnAction() {
         event.presentation.isEnabledAndVisible = project != null
     }
 
-    private fun genModelActivity(path: String?, name: String?) {
-        if (path.isNullOrBlank() || name.isNullOrBlank()) {
+    private fun genModelActivity(path: String?, name: String?, routePath: String?) {
+        if (path.isNullOrBlank() || name.isNullOrBlank() || routePath.isNullOrBlank()) {
             return
         }
-        val file = File("$path/$name.kt")
-        FileUtils.writeStringToFile(file, getInjectContent(path, name), UTF_8)
+        val activityFile = File("$path/$name.kt")
+        FileUtils.writeStringToFile(activityFile, getActivityInjectContent(path, name, routePath), UTF_8)
+        val vmName = if (name.contains("Activity")) {
+            name.replace("Activity", "ViewModel")
+        } else {
+            name + "ViewModel"
+        }
+        val viewModelFile = File("$path/$vmName.kt")
+        FileUtils.writeStringToFile(viewModelFile, getViewModelInjectContent(path, vmName), UTF_8)
     }
 
     /**
@@ -43,7 +50,7 @@ class GenerateActivity : AnAction() {
         return path.substring(path.indexOf("java") + 5, path.length).replace("/", ".")
     }
 
-    private fun getInjectContent(path: String, name: String): String {
+    private fun getActivityInjectContent(path: String, name: String, routerPath: String): String {
         try {
             val writeContent = StringBuilder("")
             val tempFileStream = javaClass.getResourceAsStream("/TempActivity.txt")
@@ -58,11 +65,64 @@ class GenerateActivity : AnAction() {
                         if (line.contains("&Activity&")) {
                             line = line.replace("&Activity&", name)
                         }
+                        if (line.contains("&routerPath&")) {
+                            line = line.replace("&routerPath&", routerPath)
+                        }
+                        if (line.contains("&ViewModel&")) {
+                            val vmName = if (name.contains("Activity")) {
+                                name.replace("Activity", "ViewModel")
+                            } else {
+                                name + "ViewModel"
+                            }
+                            line = line.replace("&ViewModel&", vmName)
+                        }
+                        if (line.contains("&Binding&")) {
+                            val bindingName = if (name.contains("Activity")) {
+                                name.replace("Activity", "Binding")
+                            } else {
+                                name + "Binding"
+                            }
+                            line = line.replace("&Binding&", "Activity$bindingName")
+                        }
+                        if (line.contains("&layout&")) {
+                            val layoutName = if (name.contains("Activity")) {
+                                name.replace("Activity", "")
+                            } else {
+                                name
+                            }.lowercase()
+                            line = line.replace("&layout&", "R.layout.activity_$layoutName")
+                        }
                     }) != null) {
                     writeContent.append(line.ifEmpty { "\n" + "\n" })
                 }
             }
-            return writeContent.toString()
+            return writeContent.toString().replace("&n", "\n")
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return ""
+        }
+    }
+
+    private fun getViewModelInjectContent(path: String, name: String): String {
+        try {
+            val writeContent = StringBuilder("")
+            val tempFileStream = javaClass.getResourceAsStream("/TempViewModel.txt")
+            val reader = tempFileStream?.let { InputStreamReader(it) }?.let { BufferedReader(it) }
+            var line: String
+            reader?.run {
+                while ((reader.readLine().also {
+                        line = it ?: ""
+                        if (line.contains("&package&")) {
+                            line = line.replace("&package&", getPackageName(path))
+                        }
+                        if (line.contains("&ViewModel&")) {
+                            line = line.replace("&ViewModel&", name)
+                        }
+                    }) != null) {
+                    writeContent.append(line.ifEmpty { "\n" + "\n" })
+                }
+            }
+            return writeContent.toString().replace("&n", "\n")
         } catch (e: Exception) {
             e.printStackTrace()
             return ""

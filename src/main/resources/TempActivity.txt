@@ -1,6 +1,19 @@
-package &package&;
+package &package&
 
-import com.gree.android.develop.mvvm.v.BaseActivity
+import com.gree.android.develop.mvvm.v.BaseActivity&n
+import com.xiaojinzi.component.anno.RouterAnno&n
+import dagger.hilt.android.AndroidEntryPoint
 
-class &Activity&: BaseActivity<,> {
+@RouterAnno(hostAndPath = "&routerPath&")&n
+@AndroidEntryPoint&n
+class &Activity&: BaseActivity<&ViewModel&, &Binding&>(&layout&) {
+
+    override fun onCreate(savedInstanceState: Bundle?) {&n
+            super.onCreate(savedInstanceState)&n
+            binding({&n
+                titleText = "Input your title name"&n
+            }, {&n
+                binding.viewModel = this@&Activity&.viewModel&n
+            })&n
+        }&n
 }
