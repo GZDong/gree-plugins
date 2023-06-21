@@ -1,5 +1,6 @@
 package &package&
 
+import android.os.Bundle&n
 import com.gree.android.develop.mvvm.v.BaseActivity&n
 import com.xiaojinzi.component.anno.RouterAnno&n
 import dagger.hilt.android.AndroidEntryPoint
