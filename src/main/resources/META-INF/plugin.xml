@@ -28,7 +28,7 @@
 
     </extensions>
     <actions>
-        <action id="GreePlugin1" class="com.gree.greeg.GenerateActivity" text="GreeGenerateActivity"
+        <action id="GreePlugin1" class="com.gree.greeg.GenerateAction" text="GreeGenerateActivity"
                 description="自动生成基于MVVM模式下的Activity、ViewModel、Model、xml等的创建工作">
             <add-to-group group-id="NewGroup" anchor="first"/>
         </action>
