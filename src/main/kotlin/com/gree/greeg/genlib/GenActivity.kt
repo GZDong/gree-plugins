@@ -18,6 +18,7 @@ fun genModelActivity(action: AnAction, path: String?, name: String?, routePath: 
         StandardCharsets.UTF_8
     )
     genViewModel(action, path, name)
+    genXml(action, path, name)
 }
 
 fun getActivityInjectContent(action: AnAction, path: String, name: String, routerPath: String): String {

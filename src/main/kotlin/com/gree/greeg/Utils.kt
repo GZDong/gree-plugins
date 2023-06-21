@@ -6,3 +6,7 @@ package com.gree.greeg
 fun getPackageName(path: String): String {
     return path.substring(path.indexOf("java") + 5, path.length).replace("/", ".")
 }
+
+fun getXmlPath(path: String): String {
+    return path.substring(0, path.indexOf("main") + 5) + "res/layout"
+}

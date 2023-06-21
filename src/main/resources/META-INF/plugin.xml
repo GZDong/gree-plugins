@@ -26,6 +26,8 @@
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <extensions defaultExtensionNs="com.intellij">
 
+        <dom.fileDescription implementation="com.gree.greeg.genlib.XmlDesc"/>
+
     </extensions>
     <actions>
         <action id="GreePlugin1" class="com.gree.greeg.GenerateAction" text="GreeGenerateActivity"
