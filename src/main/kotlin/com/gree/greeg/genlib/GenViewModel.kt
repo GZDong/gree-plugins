@@ -14,7 +14,10 @@ fun genViewModel(action: AnAction, path: String, name: String) {
     } else {
         name + "ViewModel"
     }
-    val viewModelFile = File("$path/$vmName.kt")
+    var viewModelFile = File("$path/$vmName.kt")
+    if (viewModelFile.exists()) {
+        viewModelFile = File("$path/$vmName" + "_NeedToRename.kt")
+    }
     FileUtils.writeStringToFile(viewModelFile, getViewModelInjectContent(action, path, vmName), StandardCharsets.UTF_8)
 }
 

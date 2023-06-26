@@ -12,7 +12,10 @@ fun genModelActivity(action: AnAction, path: String?, name: String?, routePath: 
     if (path.isNullOrBlank() || name.isNullOrBlank() || routePath.isNullOrBlank()) {
         return
     }
-    val activityFile = File("$path/$name.kt")
+    var activityFile = File("$path/$name.kt")
+    if (activityFile.exists()) {
+        activityFile = File("$path/$name" + "_NeedToRename.kt")
+    }
     FileUtils.writeStringToFile(
         activityFile, getActivityInjectContent(action, path, name, routePath),
         StandardCharsets.UTF_8

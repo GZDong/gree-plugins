@@ -14,10 +14,25 @@ class GenerateAction : AnAction() {
         val project = event.project
         val path = LangDataKeys.VIRTUAL_FILE.getData(event.dataContext)?.path
 
-        val modelName =
-            Messages.showInputDialog(project, "输入类名", "类名", Messages.getQuestionIcon())
-        genModelActivity(this, path, modelName, "test/$modelName")
-        LocalFileSystem.getInstance().refresh(false)
+        var modelName = Messages.showInputDialog(
+            project,
+            "输入类名(比如MainActivity，或者Main)",
+            "自动生成mvvm下的各个组件",
+            Messages.getInformationIcon()
+        )
+        if (modelName != null) {
+            if (!modelName.endsWith("Activity")) {
+                modelName = modelName.plus("Activity")
+            }
+            val result = Messages.showYesNoDialog("是否需要自动生成repository？", "下一步", Messages.getQuestionIcon())
+            if (result == 0) {
+                genModelActivity(this, path, modelName, "test/$modelName")
+                LocalFileSystem.getInstance().refresh(false)
+            } else {
+                genModelActivity(this, path, modelName, "test/$modelName")
+                LocalFileSystem.getInstance().refresh(false)
+            }
+        }
     }
 
     override fun update(event: AnActionEvent) {

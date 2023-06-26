@@ -15,7 +15,10 @@ fun genXml(action: AnAction, path: String, name: String) {
     } else {
         "activity_" + name.lowercase()
     }
-    val xmlFile = File("${getXmlPath(path)}/$xmlName.xml")
+    var xmlFile = File("${getXmlPath(path)}/$xmlName.xml")
+    if (xmlFile.exists()) {
+        xmlFile = File("${getXmlPath(path)}/$xmlName" + "_1.xml")
+    }
     FileUtils.writeStringToFile(xmlFile, getXmlInjectContent(action, path, name), StandardCharsets.UTF_8)
 }
 
