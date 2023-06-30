@@ -13,53 +13,29 @@ class GenerateAction : AnAction() {
     override fun actionPerformed(event: AnActionEvent) {
         val project = event.project
         val path = LangDataKeys.VIRTUAL_FILE.getData(event.dataContext)?.path
-
-        val chooseResult = Messages.showYesNoDialog(
-            "选择项目，不同项目的生成内容不同",
-            "选择项目",
-            "配件项目",
-            "mvp项目",
-            Messages.getQuestionIcon()
+        var activityName = Messages.showInputDialog(
+            project,
+            "输入类名(比如MainActivity，或者Main)",
+            "自动生成mvvm下的各个组件",
+            Messages.getInformationIcon()
         )
-        if (chooseResult == 0) {
-            var modelName = Messages.showInputDialog(
-                project,
-                "输入类名(比如MainActivity，或者Main)",
-                "自动生成mvvm下的各个组件",
-                Messages.getInformationIcon()
-            )
-            if (modelName != null) {
-                if (!modelName.endsWith("Activity")) {
-                    modelName = modelName.plus("Activity")
-                }
-                val result = Messages.showYesNoDialog(
-                    "是否需要自动生成repository？",
-                    "下一步",
-                    "需要",
-                    "不需要，下一步",
-                    Messages.getQuestionIcon()
-                )
-                if (result == 0) {
-                    genModelActivity(this, path, modelName, "test/$modelName")
-                    LocalFileSystem.getInstance().refresh(false)
-                } else {
-                    genModelActivity(this, path, modelName, "test/$modelName")
-                    LocalFileSystem.getInstance().refresh(false)
-                }
+        if (activityName != null) {
+            if (!activityName.endsWith("Activity")) {
+                activityName = activityName.plus("Activity")
             }
-        } else if (chooseResult == 1) {
-            var modelName = Messages.showInputDialog(
-                project,
-                "输入类名(比如MainActivity，或者Main)",
-                "自动生成mvvm下的各个组件",
-                Messages.getInformationIcon()
+            val result = Messages.showYesNoDialog(
+                "是否需要自动生成repository？",
+                "下一步",
+                "需要",
+                "不需要，下一步",
+                Messages.getQuestionIcon()
             )
-            if (modelName != null) {
-                if (!modelName.endsWith("Activity")) {
-                    modelName = modelName.plus("Activity")
-                }
-//                genModelActivity(this, path, modelName, "test/$modelName")
-//                LocalFileSystem.getInstance().refresh(false)
+            if (result == 0) {
+                genModelActivity(this, path, activityName, "test/$activityName")
+                LocalFileSystem.getInstance().refresh(false)
+            } else {
+                genModelActivity(this, path, activityName, "test/$activityName")
+                LocalFileSystem.getInstance().refresh(false)
             }
         }
     }
