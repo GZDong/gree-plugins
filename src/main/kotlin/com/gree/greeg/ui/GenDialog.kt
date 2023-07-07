@@ -59,12 +59,16 @@ class GenDialog : JDialog(), Configurable {
             }
         })
         btnCreate?.addActionListener {
-            val tempName = v_activity?.text
+            var tempName = v_activity?.text
             val routerPath = v_path?.text
             val createRepository = repositoryTips?.isSelected ?: true
             if (tempName.isNullOrBlank() || routerPath.isNullOrBlank()) {
                 errorTips?.isVisible = true
                 return@addActionListener
+            }
+            if (tempName.first().isLowerCase()) {
+                tempName =
+                    tempName.replaceFirst(tempName.first(), tempName.first().uppercase().toCharArray().first(), false)
             }
             closeListener?.onFinished(tempName, routerPath, createRepository)
             onCancel()

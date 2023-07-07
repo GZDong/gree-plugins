@@ -38,7 +38,7 @@
           <forms/>
         </constraints>
         <properties>
-          <text value="  输入类名（比如TestActivity，或者Test）"/>
+          <text value="  输入activity的类名（比如TestActivity，或者Test、testActivity、test）"/>
         </properties>
       </component>
       <component id="f0050" class="javax.swing.JTextField" binding="v_activity">
@@ -56,7 +56,7 @@
           <forms/>
         </constraints>
         <properties>
-          <text value="  输入router path（比如test/TestActivity）"/>
+          <text value="  输入router path（比如test/apple）用于Router跳转"/>
         </properties>
       </component>
       <component id="e9f53" class="javax.swing.JTextField" binding="v_path">
