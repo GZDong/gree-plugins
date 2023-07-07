@@ -1,0 +1,21 @@
+package ${PACKAGE_NAME}
+
+import android.os.Bundle
+import com.gree.android.develop.mvvm.v.BaseActivity
+import com.xiaojinzi.component.anno.RouterAnno
+import dagger.hilt.android.AndroidEntryPoint
+
+#parse("File Header.java")
+@RouterAnno(hostAndPath = "${ROUTER_PATH}")
+@AndroidEntryPoint
+class ${INPUT_NAME}Activity: BaseActivity<${INPUT_NAME}ViewModel, Activity${INPUT_NAME}Binding>(R.layout.activity_${LAYOUT}) {
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+            super.onCreate(savedInstanceState)
+            binding({
+                titleText = "Input your title name"
+            }, {
+                binding.viewModel = this@${INPUT_NAME}Activity.viewModel
+            })
+        }
+}

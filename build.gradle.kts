@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.gree"
-version = "1.1"
+version = "1.1.1"
 
 repositories {
     mavenCentral()
@@ -17,7 +17,7 @@ intellij {
     version.set("2021.3.3")
     type.set("IC") // Target IDE Platform
 
-    plugins.set(listOf("Kotlin", "android"))
+    plugins.set(listOf("Kotlin", "android", "java"))
 }
 
 tasks {

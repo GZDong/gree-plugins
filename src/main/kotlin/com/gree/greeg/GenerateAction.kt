@@ -1,50 +1,108 @@
 package com.gree.greeg
 
-import com.gree.greeg.genlib.genModelActivity
-import com.intellij.openapi.actionSystem.AnAction
+import com.gree.greeg.ui.GenDialog
+import com.intellij.codeInsight.CodeInsightActionHandler
+import com.intellij.codeInsight.generation.actions.BaseGenerateAction
+import com.intellij.ide.fileTemplates.FileTemplate
+import com.intellij.ide.fileTemplates.FileTemplateManager
+import com.intellij.ide.fileTemplates.FileTemplateUtil
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.LangDataKeys
+import com.intellij.openapi.actionSystem.PlatformDataKeys
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.vfs.LocalFileSystem
+import com.intellij.openapi.vfs.VirtualFileManager
+import com.intellij.psi.PsiClass
+import com.intellij.psi.PsiDirectory
+import com.intellij.psi.PsiManager
+import java.util.*
 
-class GenerateAction : AnAction() {
+class GenerateAction(handler: CodeInsightActionHandler? = null) : BaseGenerateAction(handler) {
+
+    override fun isValidForClass(targetClass: PsiClass?): Boolean {
+        return super.isValidForClass(targetClass)
+    }
 
     override fun actionPerformed(event: AnActionEvent) {
-        val project = event.project
+
+        val project = event.getData(PlatformDataKeys.PROJECT)
+        val dataContext = event.dataContext
         val path = LangDataKeys.VIRTUAL_FILE.getData(event.dataContext)?.path
-        var activityName = Messages.showInputDialog(
-            project,
-            "输入类名(比如MainActivity，或者Main)",
-            "自动生成mvvm下的各个组件",
-            Messages.getInformationIcon()
-        )
-        if (activityName != null) {
-            if (!activityName.endsWith("Activity")) {
-                activityName = activityName.plus("Activity")
+        GenDialog.show(object : OnFillListener {
+            override fun onFinished(tempActivityName: String, tempPath: String, chooseRep: Boolean) {
+                project?.run {
+                    //生成模板activity文件
+                    val modelName =
+                        if (tempActivityName.endsWith("Activity")) tempActivityName.removeSuffix("Activity") else tempActivityName
+                    val activityTemp = FileTemplateManager.getInstance(this).getInternalTemplate("TempActivity")
+                    val activityProperties = Properties()
+                    activityProperties.putAll(FileTemplateManager.getInstance(this).defaultProperties)
+                    activityProperties["PACKAGE_NAME"] = getPackageName(path!!)
+                    activityProperties["ROUTER_PATH"] = tempPath
+                    activityProperties["INPUT_NAME"] = modelName
+                    activityProperties["LAYOUT"] = modelName.lowercase()
+                    createTempCode(
+                        activityTemp,
+                        modelName + "Activity.kt",
+                        LangDataKeys.IDE_VIEW.getData(dataContext)!!.orChooseDirectory!!,
+                        activityProperties
+                    )
+
+                    //生成模板viewModel文件
+                    val viewModelTemp = FileTemplateManager.getInstance(this).getInternalTemplate("TempViewModel")
+                    val viewModelProperties = Properties()
+                    viewModelProperties.putAll(FileTemplateManager.getInstance(this).defaultProperties)
+                    viewModelProperties["PACKAGE_NAME"] = getPackageName(path)
+                    viewModelProperties["INPUT_NAME"] = modelName
+                    createTempCode(
+                        viewModelTemp,
+                        modelName + "ViewModel.kt",
+                        LangDataKeys.IDE_VIEW.getData(dataContext)!!.orChooseDirectory!!,
+                        viewModelProperties
+                    )
+
+                    //生成模板xml文件
+                    val xmlTemp = FileTemplateManager.getInstance(this).getInternalTemplate("TempXml")
+                    val xmlProperties = Properties()
+                    xmlProperties["PACKAGE_NAME"] = getPackageName(path)
+                    xmlProperties["INPUT_NAME"] = modelName
+                    val xmlPsiDir = PsiManager.getInstance(project)
+                        .findDirectory(VirtualFileManager.getInstance().findFileByUrl("file://" + getXmlPath(path))!!)
+                    createTempCode(
+                        xmlTemp,
+                        "R.layout.activity_" + modelName.lowercase(),
+                        xmlPsiDir!!,
+                        xmlProperties
+                    )
+                }
             }
-            val result = Messages.showYesNoDialog(
-                "是否需要自动生成repository？",
-                "下一步",
-                "需要",
-                "不需要，下一步",
-                Messages.getQuestionIcon()
-            )
-            if (result == 0) {
-                genModelActivity(this, path, activityName, "test/$activityName")
-                LocalFileSystem.getInstance().refresh(false)
-            } else {
-                genModelActivity(this, path, activityName, "test/$activityName")
-                LocalFileSystem.getInstance().refresh(false)
-            }
-        }
+        })
     }
+
 
     override fun update(event: AnActionEvent) {
         //获取工程对象
         val project: Project? = event.project
         //设置不可用且不可见
         event.presentation.isEnabledAndVisible = project != null
+    }
+
+    private fun createTempCode(
+        temp: FileTemplate,
+        fileName: String,
+        psiDir: PsiDirectory,
+        properties: Properties
+    ) {
+        ApplicationManager.getApplication().runWriteAction {
+            FileTemplateUtil.createFromTemplate(
+                temp,
+                fileName,
+                properties,
+                psiDir
+            )
+            LocalFileSystem.getInstance().refresh(false)
+        }
     }
 
 }
