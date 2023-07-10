@@ -28,19 +28,28 @@ class GenerateAction(handler: CodeInsightActionHandler? = null) : BaseGenerateAc
 
         val project = event.getData(PlatformDataKeys.PROJECT)
         val dataContext = event.dataContext
-        val path = LangDataKeys.VIRTUAL_FILE.getData(event.dataContext)?.path
+        val path = LangDataKeys.VIRTUAL_FILE.getData(event.dataContext)?.path!!.replace("\\", "/")
         GenDialog.show(object : OnFillListener {
             override fun onFinished(tempActivityName: String, tempPath: String, chooseRep: Boolean) {
                 project?.run {
                     //生成模板activity文件
                     val modelName =
                         if (tempActivityName.endsWith("Activity")) tempActivityName.removeSuffix("Activity") else tempActivityName
+                    val modelPath = getModelName(path)
                     val activityTemp = FileTemplateManager.getInstance(this).getInternalTemplate("TempActivity")
                     val activityProperties = Properties()
                     activityProperties.putAll(FileTemplateManager.getInstance(this).defaultProperties)
-                    activityProperties["PACKAGE_NAME"] = getPackageName(path!!)
+                    activityProperties["PACKAGE_NAME"] = getPackageName(path)
+                    activityProperties["MODEL_NAME"] = modelPath
                     activityProperties["ROUTER_PATH"] = tempPath
+                    activityProperties["BINDING"] =
+                        modelPath.replaceFirst(
+                            modelPath.first(),
+                            modelPath.first().uppercase().toCharArray().first(),
+                            false
+                        )
                     activityProperties["INPUT_NAME"] = modelName
+                    activityProperties["L_MODEL_NAME"] = modelPath.lowercase()
                     activityProperties["LAYOUT"] = modelName.lowercase()
                     createTempCode(
                         activityTemp,
@@ -71,10 +80,12 @@ class GenerateAction(handler: CodeInsightActionHandler? = null) : BaseGenerateAc
                         .findDirectory(VirtualFileManager.getInstance().findFileByUrl("file://" + getXmlPath(path))!!)
                     createTempCode(
                         xmlTemp,
-                        "R.layout.activity_" + modelName.lowercase(),
+                        modelPath + "_activity_" + modelName.lowercase(),
                         xmlPsiDir!!,
                         xmlProperties
                     )
+
+                    LocalFileSystem.getInstance().refresh(false)
                 }
             }
         })

@@ -2,13 +2,15 @@ package ${PACKAGE_NAME}
 
 import android.os.Bundle
 import com.gree.android.develop.mvvm.v.BaseActivity
+import com.gree.module.${MODEL_NAME}.R
+import com.gree.module.${MODEL_NAME}.databinding.${BINDING}Activity${INPUT_NAME}Binding
 import com.xiaojinzi.component.anno.RouterAnno
 import dagger.hilt.android.AndroidEntryPoint
 
 #parse("File Header.java")
 @RouterAnno(hostAndPath = "${ROUTER_PATH}")
 @AndroidEntryPoint
-class ${INPUT_NAME}Activity: BaseActivity<${INPUT_NAME}ViewModel, Activity${INPUT_NAME}Binding>(R.layout.activity_${LAYOUT}) {
+class ${INPUT_NAME}Activity: BaseActivity<${INPUT_NAME}ViewModel, ${BINDING}Activity${INPUT_NAME}Binding>(R.layout.${L_MODEL_NAME}_activity_${LAYOUT}) {
 
     override fun onCreate(savedInstanceState: Bundle?) {
             super.onCreate(savedInstanceState)

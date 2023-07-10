@@ -56,7 +56,7 @@
           <forms/>
         </constraints>
         <properties>
-          <text value="  输入router path（比如test/apple）用于Router跳转"/>
+          <text value="  输入router path（比如app/order）用于Router跳转"/>
         </properties>
       </component>
       <component id="e9f53" class="javax.swing.JTextField" binding="v_path">
