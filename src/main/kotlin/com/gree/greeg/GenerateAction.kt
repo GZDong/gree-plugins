@@ -50,7 +50,7 @@ class GenerateAction(handler: CodeInsightActionHandler? = null) : BaseGenerateAc
                         )
                     activityProperties["INPUT_NAME"] = modelName
                     activityProperties["L_MODEL_NAME"] = modelPath.lowercase()
-                    activityProperties["LAYOUT"] = modelName.lowercase()
+                    activityProperties["LAYOUT"] = getXmlEndName(modelName)
                     createTempCode(
                         activityTemp,
                         modelName + "Activity.kt",
@@ -80,7 +80,7 @@ class GenerateAction(handler: CodeInsightActionHandler? = null) : BaseGenerateAc
                         .findDirectory(VirtualFileManager.getInstance().findFileByUrl("file://" + getXmlPath(path))!!)
                     createTempCode(
                         xmlTemp,
-                        modelPath + "_activity_" + modelName.lowercase(),
+                        modelPath + "_activity_" + getXmlEndName(modelName),
                         xmlPsiDir!!,
                         xmlProperties
                     )
@@ -114,6 +114,18 @@ class GenerateAction(handler: CodeInsightActionHandler? = null) : BaseGenerateAc
             )
             LocalFileSystem.getInstance().refresh(false)
         }
+    }
+
+    private fun getXmlEndName(name: String): String {
+        val result = StringBuilder()
+        name.toCharArray().forEachIndexed { index, it ->
+            if (it.isUpperCase() && index > 0) {
+                result.append("_$it")
+            } else {
+                result.append(it)
+            }
+        }
+        return result.toString().lowercase()
     }
 
 }
