@@ -1,0 +1,12 @@
+package ${PACKAGE_NAME}
+
+import com.gree.android.develop.mvvm.m.BaseRepository
+import ${SERVICE_PATH}.${INPUT_NAME}Service
+import javax.inject.Inject
+
+#parse("File Header.java")
+class ${INPUT_NAME}RepositoryImpl @Inject constructor(
+    private var ${INPUT_NAME_PARAM}Service: ${INPUT_NAME}Service
+) : ${INPUT_NAME}Repository, BaseRepository() {
+
+}

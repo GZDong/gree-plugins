@@ -14,11 +14,16 @@ fun getXmlPath(path: String): String {
 fun getModelName(path: String): String {
     val parts = path.split("feature/")
     if (parts.size < 2) {
-        return "unknown"
+        return "firstTest"
     }
     val name = parts[1].split("/")
     if (name.isEmpty()) {
-        return  "unknown"
+        return "firstTest"
     }
     return name[0]
+}
+
+fun getModelPath(moduleName: String, path: String): String {
+    val str = "module/$moduleName"
+    return path.substring(0, path.indexOf(str) + str.length)
 }

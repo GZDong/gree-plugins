@@ -1,0 +1,21 @@
+package ${PACKAGE_NAME}
+
+import ${SERVICE_PATH}
+import dagger.Module
+import dagger.Provides
+import dagger.hilt.InstallIn
+import dagger.hilt.components.SingletonComponent
+import retrofit2.Retrofit
+import javax.inject.Singleton
+
+#parse("File Header.java")
+@Module
+@InstallIn(SingletonComponent::class)
+internal interface ServiceModule {
+
+    @Provides
+    @Singleton
+    fun provide${INPUT_NAME}Service(retrofit: Retrofit): ${INPUT_NAME}Service {
+        return retrofit.create(${INPUT_NAME}Service::class.java)
+    }
+}

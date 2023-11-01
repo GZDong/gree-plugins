@@ -1,0 +1,20 @@
+package ${PACKAGE_NAME}
+
+import ${REPOSITORY_PATH}
+import ${REPOSITORY_IMPL_PATH}
+import dagger.Binds
+import dagger.Module
+import dagger.hilt.InstallIn
+import dagger.hilt.components.SingletonComponent
+
+#parse("File Header.java")
+@Module
+@InstallIn(SingletonComponent::class)
+internal interface DataModule {
+
+    @Binds
+    fun binds${INPUT_NAME}Repository(
+        ${INPUT_NAME_PARAM}RepositoryImpl: ${INPUT_NAME}RepositoryImpl
+    ): ${INPUT_NAME}Repository
+
+}

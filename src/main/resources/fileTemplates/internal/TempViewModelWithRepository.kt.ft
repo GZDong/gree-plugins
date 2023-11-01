@@ -1,0 +1,13 @@
+package ${PACKAGE_NAME}
+
+import com.gree.android.develop.mvvm.vm.BaseViewModel
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+
+#parse("File Header.java")
+@HiltViewModel
+class ${INPUT_NAME}ViewModel @Inject constructor(
+    val ${INPUT_NAME_PARAM}Repository: ${INPUT_NAME}Repository
+) :BaseViewModel() {
+
+}
