@@ -92,8 +92,10 @@ class GenerateAction(handler: CodeInsightActionHandler? = null) : BaseGenerateAc
                             serviceDir.mkdir()
                         }
                         LocalFileSystem.getInstance().refresh(false)
-                        val repsVirtualFile = VirtualFileManager.getInstance().refreshAndFindFileByUrl("file://$repositoryPath")
-                        val serviceVirtualFile = VirtualFileManager.getInstance().refreshAndFindFileByUrl("file://$servicePath")
+                        val repsVirtualFile =
+                            VirtualFileManager.getInstance().refreshAndFindFileByUrl("file://$repositoryPath")
+                        val serviceVirtualFile =
+                            VirtualFileManager.getInstance().refreshAndFindFileByUrl("file://$servicePath")
                         val diVirtualFile = VirtualFileManager.getInstance().refreshAndFindFileByUrl("file://$diPath")
                         if (repsVirtualFile != null && serviceVirtualFile != null && diVirtualFile != null) {
                             //放入xxxRepository和它的实现类xxxRepositoryImpl
@@ -182,6 +184,22 @@ class GenerateAction(handler: CodeInsightActionHandler? = null) : BaseGenerateAc
                                 //todo 动态修改代码
                             }
                         }
+                        //生成模板viewModel文件
+                        val viewModelTemp =
+                            FileTemplateManager.getInstance(this).getInternalTemplate("TempViewModelWithRepository")
+                        val viewModelProperties = Properties()
+                        viewModelProperties.putAll(FileTemplateManager.getInstance(this).defaultProperties)
+                        viewModelProperties["PACKAGE_NAME"] = getPackageName(path)
+                        viewModelProperties["REPOSITORY_PATH"] =
+                            getPackageName(repositoryPath) + "." + modelName + "Repository"
+                        viewModelProperties["INPUT_NAME"] = modelName
+                        viewModelProperties["INPUT_NAME_PARAM"] = subModelName
+                        createTempCode(
+                            viewModelTemp,
+                            modelName + "ViewModel.kt",
+                            LangDataKeys.IDE_VIEW.getData(dataContext)!!.orChooseDirectory!!,
+                            viewModelProperties
+                        )
                     } else {
                         //生成模板viewModel文件
                         val viewModelTemp = FileTemplateManager.getInstance(this).getInternalTemplate("TempViewModel")
