@@ -16,7 +16,11 @@ import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiDirectory
 import com.intellij.psi.PsiManager
+import org.apache.commons.io.FileUtils
+import java.io.BufferedReader
 import java.io.File
+import java.io.InputStreamReader
+import java.nio.charset.StandardCharsets
 import java.util.*
 
 class GenerateAction(handler: CodeInsightActionHandler? = null) : BaseGenerateAction(handler) {
@@ -99,45 +103,52 @@ class GenerateAction(handler: CodeInsightActionHandler? = null) : BaseGenerateAc
                         val diVirtualFile = VirtualFileManager.getInstance().refreshAndFindFileByUrl("file://$diPath")
                         if (repsVirtualFile != null && serviceVirtualFile != null && diVirtualFile != null) {
                             //放入xxxRepository和它的实现类xxxRepositoryImpl
-                            val repositoryTemp =
-                                FileTemplateManager.getInstance(project).getInternalTemplate("TempRepository")
-                            val repositoryProperties = Properties()
-                            repositoryProperties["PACKAGE_NAME"] = getPackageName(repositoryPath)
-                            repositoryProperties["INPUT_NAME"] = modelName
-                            val repositoryPsiDir = psiManager.findDirectory(repsVirtualFile)
-                            createTempCode(
-                                repositoryTemp,
-                                modelName + "Repository.kt",
-                                repositoryPsiDir!!,
-                                repositoryProperties
-                            )
-                            val repositoryImplTemp =
-                                FileTemplateManager.getInstance(project).getInternalTemplate("TempRepositoryImpl")
-                            val repositoryImplProperties = Properties()
-                            repositoryImplProperties["PACKAGE_NAME"] = getPackageName(repositoryPath)
-                            repositoryImplProperties["INPUT_NAME"] = modelName
-                            repositoryImplProperties["INPUT_NAME_PARAM"] = subModelName
-                            repositoryImplProperties["SERVICE_PATH"] = getPackageName(servicePath)
-                            createTempCode(
-                                repositoryImplTemp,
-                                modelName + "RepositoryImpl.kt",
-                                repositoryPsiDir,
-                                repositoryImplProperties
-                            )
+                            if (!File(repositoryPath + modelName + "Repository.kt").exists()) {
+                                val repositoryTemp =
+                                    FileTemplateManager.getInstance(project).getInternalTemplate("TempRepository")
+                                val repositoryProperties = Properties()
+                                repositoryProperties["PACKAGE_NAME"] = getPackageName(repositoryPath)
+                                repositoryProperties["INPUT_NAME"] = modelName
+                                val repositoryPsiDir = psiManager.findDirectory(repsVirtualFile)
+                                createTempCode(
+                                    repositoryTemp,
+                                    modelName + "Repository.kt",
+                                    repositoryPsiDir!!,
+                                    repositoryProperties
+                                )
+                            }
+                            if (!File(repositoryPath + modelName + "RepositoryImpl.kt").exists()) {
+                                val repositoryImplTemp =
+                                    FileTemplateManager.getInstance(project).getInternalTemplate("TempRepositoryImpl")
+                                val repositoryImplProperties = Properties()
+                                repositoryImplProperties["PACKAGE_NAME"] = getPackageName(repositoryPath)
+                                repositoryImplProperties["INPUT_NAME"] = modelName
+                                repositoryImplProperties["INPUT_NAME_PARAM"] = subModelName
+                                repositoryImplProperties["SERVICE_PATH"] = getPackageName(servicePath)
+                                val repositoryPsiDir = psiManager.findDirectory(repsVirtualFile)
+                                createTempCode(
+                                    repositoryImplTemp,
+                                    modelName + "RepositoryImpl.kt",
+                                    repositoryPsiDir!!,
+                                    repositoryImplProperties
+                                )
+                            }
 
                             //放入xxxService类
-                            val serviceTemp =
-                                FileTemplateManager.getInstance(project).getInternalTemplate("TempService")
-                            val serviceProperties = Properties()
-                            serviceProperties["PACKAGE_NAME"] = getPackageName(servicePath)
-                            serviceProperties["INPUT_NAME"] = modelName
-                            val servicePsiDir = psiManager.findDirectory(serviceVirtualFile)
-                            createTempCode(
-                                serviceTemp,
-                                modelName + "Service.kt",
-                                servicePsiDir!!,
-                                serviceProperties
-                            )
+                            if (!File(servicePath + modelName + "Service.kt").exists()) {
+                                val serviceTemp =
+                                    FileTemplateManager.getInstance(project).getInternalTemplate("TempService")
+                                val serviceProperties = Properties()
+                                serviceProperties["PACKAGE_NAME"] = getPackageName(servicePath)
+                                serviceProperties["INPUT_NAME"] = modelName
+                                val servicePsiDir = psiManager.findDirectory(serviceVirtualFile)
+                                createTempCode(
+                                    serviceTemp,
+                                    modelName + "Service.kt",
+                                    servicePsiDir!!,
+                                    serviceProperties
+                                )
+                            }
 
                             val dataModulePath = "$diPath/DataModule.kt"
                             val dataModuleFile = File(dataModulePath)
@@ -160,7 +171,44 @@ class GenerateAction(handler: CodeInsightActionHandler? = null) : BaseGenerateAc
                                     dataModuleProperties
                                 )
                             } else {
-                                //todo 动态修改代码
+                                //1.导包
+                                val currentDataModel =
+                                    FileUtils.readFileToString(dataModuleFile, StandardCharsets.UTF_8)
+                                val linesList = currentDataModel.replace("\r", "").split("\n")
+                                if (linesList.first().contains("package")) {
+                                    (linesList as ArrayList).add(
+                                        2, "import " +
+                                                getPackageName(repositoryPath) + "." + modelName + "Repository" + "\n"
+                                    )
+                                    linesList.add(
+                                        3, "import " +
+                                                getPackageName(repositoryPath) + "." + modelName + "RepositoryImpl" + "\n"
+                                    )
+                                    var lastLineIndex = 0
+                                    val newContent = StringBuilder()
+                                    for (i in linesList.size - 1 downTo 0) {
+                                        if (linesList[i].trim() == "}") {
+                                            lastLineIndex = i
+                                            break
+                                        }
+                                    }
+                                    //2.最后一个大括号删除
+                                    linesList.removeAt(lastLineIndex)
+                                    linesList.forEach {
+                                        newContent.append(it)
+                                        if (it == "" || !it.contains("\n")) {
+                                            newContent.append("\n")
+                                        }
+                                    }
+                                    FileUtils.writeStringToFile(
+                                        dataModuleFile,
+                                        newContent.toString() + "\n" + getDataModuleInjectContent(
+                                            modelName,
+                                            subModelName
+                                        ),
+                                        StandardCharsets.UTF_8
+                                    )
+                                }
                             }
                             val serviceModulePath = "$diPath/ServiceModule.kt"
                             val serviceModuleFile = File(serviceModulePath)
@@ -181,7 +229,39 @@ class GenerateAction(handler: CodeInsightActionHandler? = null) : BaseGenerateAc
                                     serviceModuleProperties
                                 )
                             } else {
-                                //todo 动态修改代码
+                                //1.导包
+                                val currentServiceModel =
+                                    FileUtils.readFileToString(serviceModuleFile, StandardCharsets.UTF_8)
+                                val linesList = currentServiceModel.replace("\r", "").split("\n")
+                                if (linesList.first().contains("package")) {
+                                    (linesList as ArrayList).add(
+                                        2, "import " +
+                                                getPackageName(servicePath) + "." + modelName + "Service" + "\n"
+                                    )
+                                    var lastIndex = 0
+                                    val newContent = StringBuilder()
+                                    for (i in linesList.size - 1 downTo 0) {
+                                        if (linesList[i].trim() == "}") {
+                                            lastIndex = i
+                                            break
+                                        }
+                                    }
+                                    //2.最后一个大括号删除
+                                    linesList.removeAt(lastIndex)
+                                    linesList.forEach {
+                                        newContent.append(it)
+                                        if (it == "" || !it.contains("\n")) {
+                                            newContent.append("\n")
+                                        }
+                                    }
+                                    FileUtils.writeStringToFile(
+                                        serviceModuleFile,
+                                        newContent.toString() + "\n" + getServiceModuleInjectContent(
+                                            modelName
+                                        ),
+                                        StandardCharsets.UTF_8
+                                    )
+                                }
                             }
                         }
                         //生成模板viewModel文件
@@ -216,18 +296,21 @@ class GenerateAction(handler: CodeInsightActionHandler? = null) : BaseGenerateAc
                     }
 
                     //生成模板xml文件
-                    val xmlTemp = FileTemplateManager.getInstance(this).getInternalTemplate("TempXml")
-                    val xmlProperties = Properties()
-                    xmlProperties["PACKAGE_NAME"] = getPackageName(path)
-                    xmlProperties["INPUT_NAME"] = modelName
-                    val xmlPsiDir = psiManager
-                        .findDirectory(VirtualFileManager.getInstance().findFileByUrl("file://" + getXmlPath(path))!!)
-                    createTempCode(
-                        xmlTemp,
-                        modelPath + "_activity_" + getXmlEndName(modelName),
-                        xmlPsiDir!!,
-                        xmlProperties
-                    )
+                    val xmlFile = File(getXmlPath(path) + "/" + modelPath + "_activity_" + getXmlEndName(modelName) + ".xml")
+                    if (!xmlFile.exists()) {
+                        val xmlTemp = FileTemplateManager.getInstance(this).getInternalTemplate("TempXml")
+                        val xmlProperties = Properties()
+                        xmlProperties["PACKAGE_NAME"] = getPackageName(path)
+                        xmlProperties["INPUT_NAME"] = modelName
+                        val xmlPsiDir = psiManager
+                            .findDirectory(VirtualFileManager.getInstance().findFileByUrl("file://" + getXmlPath(path))!!)
+                        createTempCode(
+                            xmlTemp,
+                            modelPath + "_activity_" + getXmlEndName(modelName),
+                            xmlPsiDir!!,
+                            xmlProperties
+                        )
+                    }
 
                     LocalFileSystem.getInstance().refresh(false)
                 }
@@ -272,4 +355,52 @@ class GenerateAction(handler: CodeInsightActionHandler? = null) : BaseGenerateAc
         return result.toString().lowercase()
     }
 
+    private fun getDataModuleInjectContent(name: String, nameParam: String): String {
+        try {
+            val writeContent = StringBuilder("")
+            val tempFileStream = javaClass.getResourceAsStream("/TempDataModuleParts.txt")
+            val reader = tempFileStream?.let { InputStreamReader(it) }?.let { BufferedReader(it) }
+            var line: String
+            reader?.run {
+                while ((reader.readLine().also {
+                        line = it ?: ""
+                        if (line.contains("&input_name&")) {
+                            line = line.replace("&input_name&", name)
+                        }
+                        if (line.contains("&input_name_param&")) {
+                            line = line.replace("&input_name_param&", nameParam)
+                        }
+                    }) != null) {
+                    writeContent.append(line.ifEmpty { "\n" + "\n" })
+                }
+            }
+            return writeContent.toString().replace("&n", "\n")
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return ""
+        }
+    }
+
+    private fun getServiceModuleInjectContent(name: String): String {
+        try {
+            val writeContent = StringBuilder("")
+            val tempFileStream = javaClass.getResourceAsStream("/TempServiceModuleParts.txt")
+            val reader = tempFileStream?.let { InputStreamReader(it) }?.let { BufferedReader(it) }
+            var line: String
+            reader?.run {
+                while ((reader.readLine().also {
+                        line = it ?: ""
+                        if (line.contains("&input_name&")) {
+                            line = line.replace("&input_name&", name)
+                        }
+                    }) != null) {
+                    writeContent.append(line.ifEmpty { "\n" + "\n" })
+                }
+            }
+            return writeContent.toString().replace("&n", "\n")
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return ""
+        }
+    }
 }

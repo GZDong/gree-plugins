@@ -16,5 +16,4 @@ internal interface DataModule {
     fun binds${INPUT_NAME}Repository(
         ${INPUT_NAME_PARAM}RepositoryImpl: ${INPUT_NAME}RepositoryImpl
     ): ${INPUT_NAME}Repository
-
 }

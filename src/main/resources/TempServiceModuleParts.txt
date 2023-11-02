@@ -1,0 +1,6 @@
+    @Provides&n
+    @Singleton&n
+    fun provide&input_name&Service(retrofit: Retrofit): &input_name&Service {&n
+        return retrofit.create(&input_name&Service::class.java)&n
+    }&n
+}

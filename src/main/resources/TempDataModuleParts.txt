@@ -1,0 +1,5 @@
+    @Binds&n
+    fun binds&input_name&Repository(&n
+        &input_name_param&RepositoryImpl: &input_name&RepositoryImpl&n
+    ): &input_name&Repository&n
+}
