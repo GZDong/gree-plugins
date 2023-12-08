@@ -11,7 +11,7 @@ import javax.inject.Singleton
 #parse("File Header.java")
 @Module
 @InstallIn(SingletonComponent::class)
-internal interface ServiceModule {
+internal object ServiceModule {
 
     @Provides
     @Singleton
