@@ -32,7 +32,7 @@ tasks {
     }
 
     patchPluginXml {
-        sinceBuild.set("251")
+        sinceBuild.set("232") // 修改为当前IDE版本232
         untilBuild.set("")
     }
 

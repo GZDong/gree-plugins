@@ -31,9 +31,11 @@ class GenerateAction(handler: CodeInsightActionHandler? = null) : BaseGenerateAc
 
     override fun actionPerformed(event: AnActionEvent) {
 
+        // 获取项目和当前路径信息
         val project = event.getData(PlatformDataKeys.PROJECT)
         val dataContext = event.dataContext
         val path = LangDataKeys.VIRTUAL_FILE.getData(event.dataContext)?.path!!.replace("\\", "/")
+
         GenDialog.show(object : OnFillListener {
             override fun onFinished(tempActivityName: String, tempPath: String, chooseRep: Boolean) {
                 project?.run {

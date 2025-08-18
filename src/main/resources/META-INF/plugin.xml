@@ -1,38 +1,37 @@
 <!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
 <idea-plugin>
-    <!-- Unique identifier of the plugin. It should be FQN. It cannot be changed between the plugin versions. -->
+    <!-- 插件唯一标识，不可更改 -->
     <id>com.gree.greeg</id>
 
     <!-- Public plugin name should be written in Title Case.
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-name -->
     <name>GreeGeneration</name>
 
-    <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
-    <vendor email="A80788@gree.com.cn" url="https://www.yourcompany.com">Gree</vendor>
+    <!-- 插件名称和供应商信息 -->
+    <vendor email="A80788@gree.com.cn" url="https://www.gree.com">Gree</vendor>
 
-    <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager.
-         Simple HTML elements (text formatting, paragraphs, and lists) can be added inside of <![CDATA[ ]]> tag.
-         Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-description -->
+    <!-- 插件描述 -->
     <description><![CDATA[
     一款用于快速构建相关模板类的插件，力求提升开发效率，减少冗余工作；由GZD创建和维护，有问题请内邮A80788.
     <br>
     <em>1.1版本：自动生成Activity、ViewModel、相关的xml文件.</em>
   ]]></description>
 
-    <!-- Product and plugin compatibility requirements.
-         Read more: https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html -->
+    <!-- 依赖声明 -->
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.lang</depends>
     <depends>com.intellij.modules.java</depends>
 
-    <!-- Extension points defined by the plugin.
-         Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
+    <!-- 扩展点定义 -->
     <extensions defaultExtensionNs="com.intellij">
+        <!-- 配置界面 -->
         <applicationConfigurable instance="com.gree.greeg.ui.GenDialog"/>
+        <!-- 内部文件模板 -->
         <internalFileTemplate name="TempActivity"/>
         <internalFileTemplate name="TempViewModel"/>
         <internalFileTemplate name="TempXml"/>
     </extensions>
+    <!-- 动作定义 -->
     <actions>
         <action id="GreePlugin1" class="com.gree.greeg.GenerateAction" text="GreeGeneration"
                 icon="AllIcons.Actions.AddFile"
