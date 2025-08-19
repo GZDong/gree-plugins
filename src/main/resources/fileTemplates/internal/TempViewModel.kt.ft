@@ -5,6 +5,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
 #parse("File Header.java")
+
 @HiltViewModel
 class ${INPUT_NAME}ViewModel @Inject constructor() : BaseViewModel() {
 

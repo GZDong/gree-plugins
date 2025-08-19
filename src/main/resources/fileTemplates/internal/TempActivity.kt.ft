@@ -8,6 +8,7 @@ import com.xiaojinzi.component.anno.RouterAnno
 import dagger.hilt.android.AndroidEntryPoint
 
 #parse("File Header.java")
+
 @RouterAnno(hostAndPath = "${ROUTER_PATH}")
 @AndroidEntryPoint
 class ${INPUT_NAME}Activity: BaseActivity<${INPUT_NAME}ViewModel, ${BINDING}Activity${INPUT_NAME}Binding>(R.layout.${L_MODEL_NAME}_activity_${LAYOUT}) {

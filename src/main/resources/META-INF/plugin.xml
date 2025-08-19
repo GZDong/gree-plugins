@@ -14,7 +14,7 @@
     <description><![CDATA[
     一款用于快速构建相关模板类的插件，力求提升开发效率，减少冗余工作；由GZD创建和维护，有问题请内邮A80788.
     <br>
-    <em>1.1版本：自动生成Activity、ViewModel、相关的xml文件.</em>
+    <em>1.4版本：支持Compose版的快速构建</em>
   ]]></description>
 
     <!-- 依赖声明 -->

@@ -5,7 +5,9 @@ plugins {
 }
 
 group = "com.gree"
-version = "1.1.3"
+version = "1.1.4"
+
+description = "支持Compose版Activity、ViewModel快速构建"
 
 repositories {
     maven { url = uri("https://maven.aliyun.com/repository/public") }

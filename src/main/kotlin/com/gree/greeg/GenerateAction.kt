@@ -1,11 +1,13 @@
 package com.gree.greeg
 
+import com.gree.greeg.genlib.getXmlInjectContent
 import com.gree.greeg.ui.GenDialog
 import com.intellij.codeInsight.CodeInsightActionHandler
 import com.intellij.codeInsight.generation.actions.BaseGenerateAction
 import com.intellij.ide.fileTemplates.FileTemplate
 import com.intellij.ide.fileTemplates.FileTemplateManager
 import com.intellij.ide.fileTemplates.FileTemplateUtil
+import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.LangDataKeys
 import com.intellij.openapi.actionSystem.PlatformDataKeys
@@ -37,36 +39,62 @@ class GenerateAction(handler: CodeInsightActionHandler? = null) : BaseGenerateAc
         val path = LangDataKeys.VIRTUAL_FILE.getData(event.dataContext)?.path!!.replace("\\", "/")
 
         GenDialog.show(object : OnFillListener {
-            override fun onFinished(tempActivityName: String, tempPath: String, chooseRep: Boolean) {
+            override fun onFinished(tempActivityName: String, tempPath: String, chooseRep: Boolean, isComposeVersion: Boolean, addHelperCode: Boolean) {
                 project?.run {
                     //生成模板activity文件
-                    val modelName =
+                    val modelName = 
                         if (tempActivityName.endsWith("Activity")) tempActivityName.removeSuffix("Activity") else tempActivityName
                     val modelPath = getModelName(path)
-                    val activityTemp = FileTemplateManager.getInstance(this).getInternalTemplate("TempActivity")
                     val activityProperties = Properties()
                     activityProperties.putAll(FileTemplateManager.getInstance(this).defaultProperties)
                     activityProperties["PACKAGE_NAME"] = getPackageName(path)
-                    activityProperties["MODEL_NAME"] = modelPath
                     activityProperties["ROUTER_PATH"] = tempPath
-                    activityProperties["BINDING"] =
-                        modelPath.replaceFirst(
+                    activityProperties["INPUT_NAME"] = modelName
+
+                    // 根据是否是Compose版本选择不同的模板
+                    val activityTemp = if (isComposeVersion) {
+                        if (addHelperCode) {
+                            FileTemplateManager.getInstance(this).getInternalTemplate("TempCompActivityWithTips")
+                        } else {
+                            FileTemplateManager.getInstance(this).getInternalTemplate("TempCompActivity")
+                        }
+                    } else {
+                        val bindingName = modelPath.replaceFirst(
                             modelPath.first(),
                             modelPath.first().uppercase().toCharArray().first(),
                             false
                         )
-                    activityProperties["INPUT_NAME"] = modelName
-                    activityProperties["L_MODEL_NAME"] = modelPath.lowercase()
-                    activityProperties["LAYOUT"] = getXmlEndName(modelName)
+                        activityProperties["MODEL_NAME"] = modelPath
+                        activityProperties["BINDING"] = bindingName
+                        activityProperties["L_MODEL_NAME"] = modelPath.lowercase()
+                        activityProperties["LAYOUT"] = getXmlEndName(modelName)
+                        FileTemplateManager.getInstance(this).getInternalTemplate("TempActivity")
+                    }
+
                     createTempCode(
                         activityTemp,
                         modelName + "Activity.kt",
                         LangDataKeys.IDE_VIEW.getData(dataContext)!!.orChooseDirectory!!,
                         activityProperties
                     )
+
+                    // 如果不是Compose版本，生成XML布局文件
+                    if (!isComposeVersion) {
+                        // 生成XML布局文件
+                        val xmlPath = getXmlPath(path)
+                        val xmlFile = File(xmlPath)
+                        if (!xmlFile.exists()) {
+                            xmlFile.parentFile?.mkdirs()
+                            val xmlContent = getXmlInjectContent(this as AnAction, path, modelName)
+                            FileUtils.writeStringToFile(xmlFile, xmlContent, StandardCharsets.UTF_8)
+                            LocalFileSystem.getInstance().refresh(false)
+                        }
+                    }
                     val psiManager = PsiManager.getInstance(project)
                     if (chooseRep) {
                         //生成带resp的ViewModel，以及相关的resp文件
+                        // 移除未使用的viewModelTemplate变量声明
+                        // 根据addHelperCode参数选择ViewModel模板的逻辑已移至下方
                         //di目录
                         val diPath = getModelPath(modelPath, path) + "/di"
                         val diDir = File(diPath)
@@ -267,51 +295,86 @@ class GenerateAction(handler: CodeInsightActionHandler? = null) : BaseGenerateAc
                             }
                         }
                         //生成模板viewModel文件
-                        val viewModelTemp =
-                            FileTemplateManager.getInstance(this).getInternalTemplate("TempViewModelWithRepository")
+                        // 修复ViewModel模板选择逻辑，确保addHelperCode参数生效
+                        val viewModelTemp: FileTemplate
+                        if (isComposeVersion) {
+                            if (chooseRep) {
+                                viewModelTemp = if (addHelperCode) {
+                                    FileTemplateManager.getInstance(this).getInternalTemplate("TempCompViewModelWithRepositoryWithTips")
+                                } else {
+                                    FileTemplateManager.getInstance(this).getInternalTemplate("TempCompViewModelWithRepository")
+                                }
+                            } else {
+                                viewModelTemp = if (addHelperCode) {
+                                    FileTemplateManager.getInstance(this).getInternalTemplate("TempCompViewModelWithTips")
+                                } else {
+                                    FileTemplateManager.getInstance(this).getInternalTemplate("TempCompViewModel")
+                                }
+                            }
+                        } else {
+                            // 非Compose版本不使用带提示的模板
+                            viewModelTemp = FileTemplateManager.getInstance(this).getInternalTemplate("TempViewModelWithRepository")
+                        }
                         val viewModelProperties = Properties()
                         viewModelProperties.putAll(FileTemplateManager.getInstance(this).defaultProperties)
                         viewModelProperties["PACKAGE_NAME"] = getPackageName(path)
-                        viewModelProperties["REPOSITORY_PATH"] =
-                            getPackageName(repositoryPath) + "." + modelName + "Repository"
                         viewModelProperties["INPUT_NAME"] = modelName
+
+                        val actualViewModelTemp = viewModelTemp
+                    if (chooseRep) {
+                        viewModelProperties["REPOSITORY_PATH"] = 
+                            getPackageName(repositoryPath) + "." + modelName + "Repository"
                         viewModelProperties["INPUT_NAME_PARAM"] = subModelName
-                        createTempCode(
-                            viewModelTemp,
+                    }
+
+                    createTempCode(
+                            actualViewModelTemp,
                             modelName + "ViewModel.kt",
                             LangDataKeys.IDE_VIEW.getData(dataContext)!!.orChooseDirectory!!,
                             viewModelProperties
                         )
                     } else {
-                        //生成模板viewModel文件
-                        val viewModelTemp = FileTemplateManager.getInstance(this).getInternalTemplate("TempViewModel")
+                        // 根据是否选择仓库使用不同的模板
+                        val actualViewModelTemp = if (isComposeVersion) {
+                            if (addHelperCode) {
+                                FileTemplateManager.getInstance(this).getInternalTemplate("TempCompViewModelWithTips")
+                            } else {
+                                FileTemplateManager.getInstance(this).getInternalTemplate("TempCompViewModel")
+                            }
+                        } else {
+                            // 非Compose版本不使用带提示的模板
+                            FileTemplateManager.getInstance(this).getInternalTemplate("TempViewModel")
+                        }
                         val viewModelProperties = Properties()
                         viewModelProperties.putAll(FileTemplateManager.getInstance(this).defaultProperties)
                         viewModelProperties["PACKAGE_NAME"] = getPackageName(path)
                         viewModelProperties["INPUT_NAME"] = modelName
                         createTempCode(
-                            viewModelTemp,
+                            actualViewModelTemp,
                             modelName + "ViewModel.kt",
                             LangDataKeys.IDE_VIEW.getData(dataContext)!!.orChooseDirectory!!,
                             viewModelProperties
                         )
                     }
 
-                    //生成模板xml文件
-                    val xmlFile = File(getXmlPath(path) + "/" + modelPath + "_activity_" + getXmlEndName(modelName) + ".xml")
-                    if (!xmlFile.exists()) {
-                        val xmlTemp = FileTemplateManager.getInstance(this).getInternalTemplate("TempXml")
-                        val xmlProperties = Properties()
-                        xmlProperties["PACKAGE_NAME"] = getPackageName(path)
-                        xmlProperties["INPUT_NAME"] = modelName
-                        val xmlPsiDir = psiManager
-                            .findDirectory(VirtualFileManager.getInstance().findFileByUrl("file://" + getXmlPath(path))!!)
-                        createTempCode(
-                            xmlTemp,
-                            modelPath + "_activity_" + getXmlEndName(modelName),
-                            xmlPsiDir!!,
-                            xmlProperties
-                        )
+                    //非Compose版本才生成XML模板
+                    if (!isComposeVersion) {
+                        //生成模板xml文件
+                        val xmlFile = File(getXmlPath(path) + "/" + modelPath + "_activity_" + getXmlEndName(modelName) + ".xml")
+                        if (!xmlFile.exists()) {
+                            val xmlTemp = FileTemplateManager.getInstance(this).getInternalTemplate("TempXml")
+                            val xmlProperties = Properties()
+                            xmlProperties["PACKAGE_NAME"] = getPackageName(path)
+                            xmlProperties["INPUT_NAME"] = modelName
+                            val xmlPsiDir = psiManager
+                                .findDirectory(VirtualFileManager.getInstance().findFileByUrl("file://" + getXmlPath(path))!!)
+                            createTempCode(
+                                xmlTemp,
+                                modelPath + "_activity_" + getXmlEndName(modelName),
+                                xmlPsiDir!!,
+                                xmlProperties
+                            )
+                        }
                     }
 
                     LocalFileSystem.getInstance().refresh(false)

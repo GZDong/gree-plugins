@@ -1,0 +1,26 @@
+package ${PACKAGE_NAME}
+
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.tooling.preview.Preview
+import com.gree.android.develop.mvvm.compose.CompBaseActivity
+import com.gree.android.develop.mvvm.compose.baseScreen
+import com.xiaojinzi.component.anno.RouterAnno
+import dagger.hilt.android.AndroidEntryPoint
+
+#parse("File Header.java")
+
+@RouterAnno(hostAndPath = "${ROUTER_PATH}")
+@AndroidEntryPoint
+class ${INPUT_NAME}Activity : CompBaseActivity() {
+    override val content = baseScreen<${INPUT_NAME}ViewModel, ${INPUT_NAME}UiState>(
+        title = "input your title"
+    ) { vm, state ->
+        PageContent(state)
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun PageContent(uiState: ${INPUT_NAME}UiState = ${INPUT_NAME}UiState()) {
+
+}

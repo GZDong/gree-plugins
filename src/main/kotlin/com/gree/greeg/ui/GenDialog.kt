@@ -31,6 +31,8 @@ class GenDialog : JDialog(), Configurable {
     private var pathTips: JLabel? = null
     private var v_path: JTextField? = null
     private var repositoryTips: JCheckBox? = null
+    private var composeVersionTips: JCheckBox? = null
+    private var addHelperCodeTips: JCheckBox? = null
     private var btnCreate: JButton? = null
     private var errorTips: JLabel? = null
     private var closeListener: OnFillListener? = null
@@ -74,15 +76,41 @@ class GenDialog : JDialog(), Configurable {
         gbc.gridwidth = GridBagConstraints.REMAINDER
         contentPanel?.add(v_path, gbc)
 
+        // 创建一个面板来放置两个复选框
+        val checkBoxPanel = JPanel()
+        checkBoxPanel.layout = GridBagLayout()
+        val checkBoxGbc = GridBagConstraints()
+        checkBoxGbc.fill = GridBagConstraints.HORIZONTAL
+        checkBoxGbc.insets = java.awt.Insets(0, 0, 0, 10)
+        checkBoxGbc.weightx = 1.0
+        checkBoxGbc.gridwidth = 1
+
+        // 添加'是否是Compose版本?'复选框
+        composeVersionTips = JCheckBox("是否是Compose版本?")
+        composeVersionTips?.isSelected = true
+        checkBoxPanel.add(composeVersionTips, checkBoxGbc)
+
+        // 添加'是否添加辅助代码'复选框
+        addHelperCodeTips = JCheckBox("是否添加辅助代码?")
+        addHelperCodeTips?.isSelected = false  // 默认不勾选
+        checkBoxGbc.gridx = 1
+        checkBoxGbc.insets = java.awt.Insets(0, 10, 0, 0)
+        checkBoxPanel.add(addHelperCodeTips, checkBoxGbc)
+
+        // 将面板添加到主布局
+        gbc.gridy = 5
+        gbc.gridwidth = GridBagConstraints.REMAINDER
+        contentPanel?.add(checkBoxPanel, gbc)
+
         repositoryTips = JCheckBox("是否自动生成repository?")
         repositoryTips?.isSelected = true
-        gbc.gridy = 5
+        gbc.gridy = 6
         gbc.gridwidth = GridBagConstraints.REMAINDER
         contentPanel?.add(repositoryTips, gbc)
 
         // 创建按钮并设置为拉满宽度
         btnCreate = JButton("创建")
-        gbc.gridy = 6
+        gbc.gridy = 7
         gbc.gridwidth = GridBagConstraints.REMAINDER
         gbc.fill = GridBagConstraints.HORIZONTAL
         gbc.insets = java.awt.Insets(15, 30, 5, 30)  // 增加左右边距
@@ -92,7 +120,7 @@ class GenDialog : JDialog(), Configurable {
         errorTips = JLabel("*请输入完整信息!")
         errorTips?.foreground = java.awt.Color.RED
         errorTips?.isVisible = false
-        gbc.gridy = 7
+        gbc.gridy = 8
         gbc.gridwidth = GridBagConstraints.REMAINDER
         gbc.fill = GridBagConstraints.NONE
         gbc.anchor = GridBagConstraints.CENTER
@@ -129,6 +157,8 @@ class GenDialog : JDialog(), Configurable {
             var tempName = v_activity?.text
             val routerPath = v_path?.text
             val createRepository = repositoryTips?.isSelected ?: true
+            val isComposeVersion = composeVersionTips?.isSelected ?: true
+            val addHelperCode = addHelperCodeTips?.isSelected ?: false
             if (tempName.isNullOrBlank() || routerPath.isNullOrBlank()) {
                 errorTips?.isVisible = true
                 errorTips?.text = "*请输入完整信息!"
@@ -139,7 +169,7 @@ class GenDialog : JDialog(), Configurable {
                 tempName =
                         tempName.replaceFirst(tempName.first(), tempName.first().uppercase().toCharArray().first(), false)
             }
-            closeListener?.onFinished(tempName, routerPath, createRepository)
+            closeListener?.onFinished(tempName, routerPath, createRepository, isComposeVersion, addHelperCode)
             onCancel()
         }
         errorTips?.isVisible = false

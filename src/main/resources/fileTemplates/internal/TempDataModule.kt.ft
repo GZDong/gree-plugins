@@ -8,6 +8,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 
 #parse("File Header.java")
+
 @Module
 @InstallIn(SingletonComponent::class)
 internal interface DataModule {

@@ -1,0 +1,26 @@
+package ${PACKAGE_NAME}
+
+import ${REPOSITORY_PATH}
+import com.gree.android.develop.mvvm.compose.CompBaseViewModel
+import com.gree.android.develop.mvvm.compose.UiState
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+
+#parse("File Header.java")
+
+data class ${INPUT_NAME}UiState(
+    val name: String = ""//这里的数据，必须是val类型，这是一个快照
+) : UiState
+
+@HiltViewModel
+class ${INPUT_NAME}ViewModel @Inject constructor(
+    private val ${INPUT_NAME_PARAM}Repository: ${INPUT_NAME}Repository
+) : CompBaseViewModel<${INPUT_NAME}UiState>(${INPUT_NAME}UiState()) {
+
+    /**
+     * 更新Ui的正确做法：调用setState，copy不可变的属性
+     */
+    fun updateUi() {
+        setState { copy(name = "newName") }
+    }
+}
