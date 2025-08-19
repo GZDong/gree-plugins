@@ -3,7 +3,7 @@ package ${PACKAGE_NAME}
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import com.gree.android.develop.mvvm.compose.CompBaseActivity
-import com.gree.android.develop.mvvm.compose.baseScreen
+import com.gree.android.develop.mvvm.compose.SetupScreen
 import com.xiaojinzi.component.anno.RouterAnno
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -12,10 +12,14 @@ import dagger.hilt.android.AndroidEntryPoint
 @RouterAnno(hostAndPath = "${ROUTER_PATH}")
 @AndroidEntryPoint
 class ${INPUT_NAME}Activity : CompBaseActivity() {
-    override val content = baseScreen<${INPUT_NAME}ViewModel, ${INPUT_NAME}UiState>(
-        title = "input your title"
-    ) { vm, state ->
-        PageContent(state)
+
+    @Composable
+    override fun BuildContent() {
+        SetupScreen<${INPUT_NAME}ViewModel, ${INPUT_NAME}UiState>(
+            title = "input your title"
+        ) { vm, state ->
+            PageContent(state)
+        }
     }
 }
 
