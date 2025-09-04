@@ -2,12 +2,14 @@ package ${PACKAGE_NAME}
 
 import ${REPOSITORY_PATH}
 import com.gree.android.develop.mvvm.compose.CompBaseViewModel
+import androidx.compose.runtime.Immutable
 import com.gree.android.develop.mvvm.compose.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
 #parse("File Header.java")
 
+@Immutable
 data class ${INPUT_NAME}UiState(
 
 ) : UiState
