@@ -1,0 +1,22 @@
+package ${PACKAGE_NAME}
+
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.tooling.preview.Preview
+import com.gree.android.develop.mvvm.compose.SetupScreen
+import com.gree.comp_page_annotations.CompPage
+
+#parse("File Header.java")
+
+@CompPage(
+    route = "${ROUTER_PATH}"
+)
+
+@Preview(showBackground = true)
+@Composable
+fun ${INPUT_NAME}Page() {
+    SetupScreen<${INPUT_NAME}ViewModel, ${INPUT_NAME}UiState>(
+        title = "input your title"
+    ) { vm, state ->
+
+    }
+}
