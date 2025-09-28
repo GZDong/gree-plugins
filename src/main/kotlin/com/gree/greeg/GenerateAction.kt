@@ -44,7 +44,8 @@ class GenerateAction(handler: CodeInsightActionHandler? = null) : BaseGenerateAc
                     tempPath: String,
                     chooseRep: Boolean,
                     isComposeVersion: Boolean,
-                    isPageSelected: Boolean
+                    isPageSelected: Boolean,
+                    followStructure: Boolean
             ) {
                 project?.run {
                     // 1. Normalize names based on mode
@@ -125,193 +126,246 @@ class GenerateAction(handler: CodeInsightActionHandler? = null) : BaseGenerateAc
                         }
                     }
                     val psiManager = PsiManager.getInstance(project)
-                    // 5. Repository/service/DI generation (use baseName for file/class names)
+                    // 5. Repository/service/DI generation
                     if (chooseRep) {
-                        val diPath = getModelPath(modelPath, path) + "/di"
-                        val diDir = File(diPath)
-                        if (!diDir.exists()) {
-                            diDir.mkdir()
-                        }
-                        val subModelName = baseName.replaceFirst(
+                        if (followStructure) {
+                            // 原有逻辑：遵循目录结构，可能追加
+                            val diPath = getModelPath(modelPath, path) + "/di"
+                            val diDir = File(diPath)
+                            if (!diDir.exists()) {
+                                diDir.mkdir()
+                            }
+                            val subModelName = baseName.replaceFirst(
                                 baseName.first(),
                                 baseName.first().lowercase().toCharArray()[0],
                                 false
-                        )
-                        val dataPath = getModelPath(modelPath, path) + "/data"
-                        val dataDir = File(dataPath)
-                        if (!dataDir.exists()) {
-                            dataDir.mkdir()
-                        }
-                        val repositoryPath = "$dataPath/repository"
-                        val repositoryDir = File(repositoryPath)
-                        if (!repositoryDir.exists()) {
-                            repositoryDir.mkdir()
-                        }
-                        val servicePath = "$dataPath/service"
-                        val serviceDir = File(servicePath)
-                        if (!serviceDir.exists()) {
-                            serviceDir.mkdir()
-                        }
-                        LocalFileSystem.getInstance().refresh(false)
-                        val repsVirtualFile =
+                            )
+                            val dataPath = getModelPath(modelPath, path) + "/data"
+                            val dataDir = File(dataPath)
+                            if (!dataDir.exists()) {
+                                dataDir.mkdir()
+                            }
+                            val repositoryPath = "$dataPath/repository"
+                            val repositoryDir = File(repositoryPath)
+                            if (!repositoryDir.exists()) {
+                                repositoryDir.mkdir()
+                            }
+                            val servicePath = "$dataPath/service"
+                            val serviceDir = File(servicePath)
+                            if (!serviceDir.exists()) {
+                                serviceDir.mkdir()
+                            }
+                            LocalFileSystem.getInstance().refresh(false)
+                            val repsVirtualFile =
                                 VirtualFileManager.getInstance().refreshAndFindFileByUrl("file://$repositoryPath")
-                        val serviceVirtualFile =
+                            val serviceVirtualFile =
                                 VirtualFileManager.getInstance().refreshAndFindFileByUrl("file://$servicePath")
-                        val diVirtualFile = VirtualFileManager.getInstance().refreshAndFindFileByUrl("file://$diPath")
-                        if (repsVirtualFile != null && serviceVirtualFile != null && diVirtualFile != null) {
-                            if (!File(repositoryPath + baseName + "Repository.kt").exists()) {
-                                val repositoryTemp =
+                            val diVirtualFile = VirtualFileManager.getInstance().refreshAndFindFileByUrl("file://$diPath")
+                            if (repsVirtualFile != null && serviceVirtualFile != null && diVirtualFile != null) {
+                                // 保持原有的 Repository/Service/DataModule/ServiceModule 生成与追加逻辑
+                                if (!File(repositoryPath + baseName + "Repository.kt").exists()) {
+                                    val repositoryTemp =
                                         FileTemplateManager.getInstance(project).getInternalTemplate("TempRepository")
-                                val repositoryProperties = Properties()
-                                repositoryProperties["PACKAGE_NAME"] = getPackageName(repositoryPath)
-                                repositoryProperties["INPUT_NAME"] = baseName
-                                val repositoryPsiDir = psiManager.findDirectory(repsVirtualFile)
-                                createTempCode(
+                                    val repositoryProperties = Properties()
+                                    repositoryProperties["PACKAGE_NAME"] = getPackageName(repositoryPath)
+                                    repositoryProperties["INPUT_NAME"] = baseName
+                                    val repositoryPsiDir = psiManager.findDirectory(repsVirtualFile)
+                                    createTempCode(
                                         repositoryTemp,
                                         baseName + "Repository.kt",
                                         repositoryPsiDir!!,
                                         repositoryProperties
-                                )
-                            }
-                            if (!File(repositoryPath + baseName + "RepositoryImpl.kt").exists()) {
-                                val repositoryImplTemp =
+                                    )
+                                }
+                                if (!File(repositoryPath + baseName + "RepositoryImpl.kt").exists()) {
+                                    val repositoryImplTemp =
                                         FileTemplateManager.getInstance(project).getInternalTemplate("TempRepositoryImpl")
-                                val repositoryImplProperties = Properties()
-                                repositoryImplProperties["PACKAGE_NAME"] = getPackageName(repositoryPath)
-                                repositoryImplProperties["INPUT_NAME"] = baseName
-                                repositoryImplProperties["INPUT_NAME_PARAM"] = subModelName
-                                repositoryImplProperties["SERVICE_PATH"] = getPackageName(servicePath)
-                                val repositoryPsiDir = psiManager.findDirectory(repsVirtualFile)
-                                createTempCode(
+                                    val repositoryImplProperties = Properties()
+                                    repositoryImplProperties["PACKAGE_NAME"] = getPackageName(repositoryPath)
+                                    repositoryImplProperties["INPUT_NAME"] = baseName
+                                    repositoryImplProperties["INPUT_NAME_PARAM"] = subModelName
+                                    repositoryImplProperties["SERVICE_PATH"] = getPackageName(servicePath)
+                                    val repositoryPsiDir = psiManager.findDirectory(repsVirtualFile)
+                                    createTempCode(
                                         repositoryImplTemp,
                                         baseName + "RepositoryImpl.kt",
                                         repositoryPsiDir!!,
                                         repositoryImplProperties
-                                )
-                            }
-                            if (!File(servicePath + baseName + "Service.kt").exists()) {
-                                val serviceTemp =
+                                    )
+                                }
+                                if (!File(servicePath + baseName + "Service.kt").exists()) {
+                                    val serviceTemp =
                                         FileTemplateManager.getInstance(project).getInternalTemplate("TempService")
-                                val serviceProperties = Properties()
-                                serviceProperties["PACKAGE_NAME"] = getPackageName(servicePath)
-                                serviceProperties["INPUT_NAME"] = baseName
-                                val servicePsiDir = psiManager.findDirectory(serviceVirtualFile)
-                                createTempCode(
+                                    val serviceProperties = Properties()
+                                    serviceProperties["PACKAGE_NAME"] = getPackageName(servicePath)
+                                    serviceProperties["INPUT_NAME"] = baseName
+                                    val servicePsiDir = psiManager.findDirectory(serviceVirtualFile)
+                                    createTempCode(
                                         serviceTemp,
                                         baseName + "Service.kt",
                                         servicePsiDir!!,
                                         serviceProperties
-                                )
-                            }
-                            val dataModulePath = "$diPath/DataModule.kt"
-                            val dataModuleFile = File(dataModulePath)
-                            if (!dataModuleFile.exists()) {
-                                val dataModuleTemp =
+                                    )
+                                }
+                                val dataModulePath = "$diPath/DataModule.kt"
+                                val dataModuleFile = File(dataModulePath)
+                                if (!dataModuleFile.exists()) {
+                                    val dataModuleTemp =
                                         FileTemplateManager.getInstance(project).getInternalTemplate("TempDataModule")
-                                val dataModuleProperties = Properties()
-                                dataModuleProperties["PACKAGE_NAME"] = getPackageName(diPath)
-                                dataModuleProperties["REPOSITORY_PATH"] =
+                                    val dataModuleProperties = Properties()
+                                    dataModuleProperties["PACKAGE_NAME"] = getPackageName(diPath)
+                                    dataModuleProperties["REPOSITORY_PATH"] =
                                         getPackageName(repositoryPath) + "." + baseName + "Repository"
-                                dataModuleProperties["REPOSITORY_IMPL_PATH"] =
+                                    dataModuleProperties["REPOSITORY_IMPL_PATH"] =
                                         getPackageName(repositoryPath) + "." + baseName + "RepositoryImpl"
-                                dataModuleProperties["INPUT_NAME"] = baseName
-                                dataModuleProperties["INPUT_NAME_PARAM"] = subModelName
-                                val dataModulePsiDir = psiManager.findDirectory(diVirtualFile)
-                                createTempCode(
+                                    dataModuleProperties["INPUT_NAME"] = baseName
+                                    dataModuleProperties["INPUT_NAME_PARAM"] = subModelName
+                                    val dataModulePsiDir = psiManager.findDirectory(diVirtualFile)
+                                    createTempCode(
                                         dataModuleTemp,
                                         "DataModule.kt",
                                         dataModulePsiDir!!,
                                         dataModuleProperties
-                                )
-                            } else {
-                                val currentDataModel =
+                                    )
+                                } else {
+                                    val currentDataModel =
                                         FileUtils.readFileToString(dataModuleFile, StandardCharsets.UTF_8)
-                                val linesList = currentDataModel.replace("\r", "").split("\n")
-                                if (linesList.first().contains("package")) {
-                                    (linesList as ArrayList).add(
+                                    val linesList = currentDataModel.replace("\r", "").split("\n")
+                                    if (linesList.first().contains("package")) {
+                                        (linesList as ArrayList).add(
                                             2, "import " +
-                                            getPackageName(repositoryPath) + "." + baseName + "Repository" + "\n"
-                                    )
-                                    linesList.add(
+                                                getPackageName(repositoryPath) + "." + baseName + "Repository" + "\n"
+                                        )
+                                        linesList.add(
                                             3, "import " +
-                                            getPackageName(repositoryPath) + "." + baseName + "RepositoryImpl" + "\n"
-                                    )
-                                    var lastLineIndex = 0
-                                    val newContent = StringBuilder()
-                                    for (i in linesList.size - 1 downTo 0) {
-                                        if (linesList[i].trim() == "}") {
-                                            lastLineIndex = i
-                                            break
+                                                getPackageName(repositoryPath) + "." + baseName + "RepositoryImpl" + "\n"
+                                        )
+                                        var lastLineIndex = 0
+                                        val newContent = StringBuilder()
+                                        for (i in linesList.size - 1 downTo 0) {
+                                            if (linesList[i].trim() == "}") {
+                                                lastLineIndex = i
+                                                break
+                                            }
                                         }
-                                    }
-                                    linesList.removeAt(lastLineIndex)
-                                    linesList.forEach {
-                                        newContent.append(it)
-                                        if (it == "" || !it.contains("\n")) {
-                                            newContent.append("\n")
+                                        linesList.removeAt(lastLineIndex)
+                                        linesList.forEach {
+                                            newContent.append(it)
+                                            if (it == "" || !it.contains("\n")) {
+                                                newContent.append("\n")
+                                            }
                                         }
-                                    }
-                                    FileUtils.writeStringToFile(
+                                        FileUtils.writeStringToFile(
                                             dataModuleFile,
                                             newContent.toString() + "\n" + getDataModuleInjectContent(
-                                                    baseName,
-                                                    subModelName
+                                                baseName,
+                                                subModelName
                                             ),
                                             StandardCharsets.UTF_8
-                                    )
+                                        )
+                                    }
                                 }
-                            }
-                            val serviceModulePath = "$diPath/ServiceModule.kt"
-                            val serviceModuleFile = File(serviceModulePath)
-                            if (!serviceModuleFile.exists()) {
-                                val serviceModuleTemp =
+                                val serviceModulePath = "$diPath/ServiceModule.kt"
+                                val serviceModuleFile = File(serviceModulePath)
+                                if (!serviceModuleFile.exists()) {
+                                    val serviceModuleTemp =
                                         FileTemplateManager.getInstance(project)
-                                                .getInternalTemplate("TempServiceModule")
-                                val serviceModuleProperties = Properties()
-                                serviceModuleProperties["PACKAGE_NAME"] = getPackageName(diPath)
-                                serviceModuleProperties["SERVICE_PATH"] =
+                                            .getInternalTemplate("TempServiceModule")
+                                    val serviceModuleProperties = Properties()
+                                    serviceModuleProperties["PACKAGE_NAME"] = getPackageName(diPath)
+                                    serviceModuleProperties["SERVICE_PATH"] =
                                         getPackageName(servicePath) + "." + baseName + "Service"
-                                serviceModuleProperties["INPUT_NAME"] = baseName
-                                val serviceModulePsiDir = psiManager.findDirectory(diVirtualFile)
-                                createTempCode(
+                                    serviceModuleProperties["INPUT_NAME"] = baseName
+                                    val serviceModulePsiDir = psiManager.findDirectory(diVirtualFile)
+                                    createTempCode(
                                         serviceModuleTemp,
                                         "ServiceModule.kt",
                                         serviceModulePsiDir!!,
                                         serviceModuleProperties
-                                )
-                            } else {
-                                val currentServiceModel =
-                                        FileUtils.readFileToString(serviceModuleFile, StandardCharsets.UTF_8)
-                                val linesList = currentServiceModel.replace("\r", "").split("\n")
-                                if (linesList.first().contains("package")) {
-                                    (linesList as ArrayList).add(
-                                            2, "import " +
-                                            getPackageName(servicePath) + "." + baseName + "Service" + "\n"
                                     )
-                                    var lastIndex = 0
-                                    val newContent = StringBuilder()
-                                    for (i in linesList.size - 1 downTo 0) {
-                                        if (linesList[i].trim() == "}") {
-                                            lastIndex = i
-                                            break
+                                } else {
+                                    val currentServiceModel =
+                                        FileUtils.readFileToString(serviceModuleFile, StandardCharsets.UTF_8)
+                                    val linesList = currentServiceModel.replace("\r", "").split("\n")
+                                    if (linesList.first().contains("package")) {
+                                        (linesList as ArrayList).add(
+                                            2, "import " +
+                                                getPackageName(servicePath) + "." + baseName + "Service" + "\n"
+                                        )
+                                        var lastIndex = 0
+                                        val newContent = StringBuilder()
+                                        for (i in linesList.size - 1 downTo 0) {
+                                            if (linesList[i].trim() == "}") {
+                                                lastIndex = i
+                                                break
+                                            }
                                         }
-                                    }
-                                    linesList.removeAt(lastIndex)
-                                    linesList.forEach {
-                                        newContent.append(it)
-                                        if (it == "" || !it.contains("\n")) {
-                                            newContent.append("\n")
+                                        linesList.removeAt(lastIndex)
+                                        linesList.forEach {
+                                            newContent.append(it)
+                                            if (it == "" || !it.contains("\n")) {
+                                                newContent.append("\n")
+                                            }
                                         }
-                                    }
-                                    FileUtils.writeStringToFile(
+                                        FileUtils.writeStringToFile(
                                             serviceModuleFile,
                                             newContent.toString() + "\n" + getServiceModuleInjectContent(
-                                                    baseName
+                                                baseName
                                             ),
                                             StandardCharsets.UTF_8
-                                    )
+                                        )
+                                    }
                                 }
                             }
+                        } else {
+                            // 未遵循目录结构逻辑：全部新建，放在当前目录
+                            val targetDir = LangDataKeys.IDE_VIEW.getData(dataContext)!!.orChooseDirectory!!
+                            val subModelName = baseName.replaceFirst(
+                                baseName.first(),
+                                baseName.first().lowercase().toCharArray()[0],
+                                false
+                            )
+
+                            // Repository
+                            val repositoryTemp = FileTemplateManager.getInstance(project).getInternalTemplate("TempRepository")
+                            val repositoryProperties = Properties()
+                            repositoryProperties["PACKAGE_NAME"] = getPackageName(path)
+                            repositoryProperties["INPUT_NAME"] = baseName
+                            createTempCode(repositoryTemp, baseName + "Repository.kt", targetDir, repositoryProperties)
+
+                            // RepositoryImpl
+                            val repositoryImplTemp = FileTemplateManager.getInstance(project).getInternalTemplate("TempRepositoryImpl")
+                            val repositoryImplProperties = Properties()
+                            repositoryImplProperties["PACKAGE_NAME"] = getPackageName(path)
+                            repositoryImplProperties["INPUT_NAME"] = baseName
+                            repositoryImplProperties["INPUT_NAME_PARAM"] = subModelName
+                            repositoryImplProperties["SERVICE_PATH"] = getPackageName(path)
+                            createTempCode(repositoryImplTemp, baseName + "RepositoryImpl.kt", targetDir, repositoryImplProperties)
+
+                            // Service
+                            val serviceTemp = FileTemplateManager.getInstance(project).getInternalTemplate("TempService")
+                            val serviceProperties = Properties()
+                            serviceProperties["PACKAGE_NAME"] = getPackageName(path)
+                            serviceProperties["INPUT_NAME"] = baseName
+                            createTempCode(serviceTemp, baseName + "Service.kt", targetDir, serviceProperties)
+
+                            // DataModule
+                            val dataModuleTemp = FileTemplateManager.getInstance(project).getInternalTemplate("TempDataModule")
+                            val dataModuleProperties = Properties()
+                            dataModuleProperties["PACKAGE_NAME"] = getPackageName(path)
+                            dataModuleProperties["REPOSITORY_PATH"] = getPackageName(path) + "." + baseName + "Repository"
+                            dataModuleProperties["REPOSITORY_IMPL_PATH"] = getPackageName(path) + "." + baseName + "RepositoryImpl"
+                            dataModuleProperties["INPUT_NAME"] = baseName
+                            dataModuleProperties["INPUT_NAME_PARAM"] = subModelName
+                            createTempCode(dataModuleTemp, "DataModule.kt", targetDir, dataModuleProperties)
+
+                            // ServiceModule
+                            val serviceModuleTemp = FileTemplateManager.getInstance(project).getInternalTemplate("TempServiceModule")
+                            val serviceModuleProperties = Properties()
+                            serviceModuleProperties["PACKAGE_NAME"] = getPackageName(path)
+                            serviceModuleProperties["SERVICE_PATH"] = getPackageName(path) + "." + baseName + "Service"
+                            serviceModuleProperties["INPUT_NAME"] = baseName
+                            createTempCode(serviceModuleTemp, "ServiceModule.kt", targetDir, serviceModuleProperties)
                         }
                     }
                     // 6. ViewModel/UiState generation (refactored)

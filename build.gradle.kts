@@ -5,9 +5,9 @@ plugins {
 }
 
 group = "com.gree"
-version = "1.1.6"
+version = "1.1.7"
 
-description = "支持Compose版单Activity及路由"
+description = "解决目录结构不统一，依旧选择生成的问题"
 
 repositories {
     maven { url = uri("https://maven.aliyun.com/repository/public") }

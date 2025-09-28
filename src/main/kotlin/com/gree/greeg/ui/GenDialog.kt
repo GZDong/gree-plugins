@@ -37,6 +37,10 @@ class GenDialog : JDialog(), Configurable {
     private var pathTips: JLabel? = null
     private var v_path: JTextField? = null
     private var repositoryTips: JCheckBox? = null
+    private var followStructureRadio: JRadioButton? = null
+    private var notFollowStructureRadio: JRadioButton? = null
+    private var structureGroup: ButtonGroup? = null
+    private var structureTips: JLabel? = null
     private var btnCreate: JButton? = null
     private var errorTips: JLabel? = null
     private var closeListener: OnFillListener? = null
@@ -60,7 +64,7 @@ class GenDialog : JDialog(), Configurable {
         gbc.anchor = GridBagConstraints.CENTER
         gbc.fill = GridBagConstraints.HORIZONTAL
         gbc.weightx = 1.0
-        gbc.insets = java.awt.Insets(10, 0, 10, 0) // Top, left, bottom, right for header
+        gbc.insets = java.awt.Insets(15, 0, 15, 0) // More space above and below the title
         contentPanel?.add(title, gbc)
 
         // 重置GridBagConstraints
@@ -90,9 +94,11 @@ class GenDialog : JDialog(), Configurable {
         composeTypeGroup?.add(composeTypeActivityRadio)
         composeTypePageRadio?.isSelected = true
         gbc.gridy = 2
-        gbc.insets = java.awt.Insets(5, 20, 5, 20)
+        // 让二级选项整体左移，凸显为二级
+        gbc.insets = java.awt.Insets(5, 40, 5, 20)
         contentPanel?.add(composeTypePageRadio, gbc)
         gbc.gridy = 3
+        gbc.insets = java.awt.Insets(5, 40, 5, 20)
         contentPanel?.add(composeTypeActivityRadio, gbc)
         gbc.gridx = 0
 
@@ -157,9 +163,63 @@ class GenDialog : JDialog(), Configurable {
         gbc.insets = java.awt.Insets(5, 20, 5, 20)
         contentPanel?.add(repositoryTips, gbc)
 
+        // Structure options, only visible when repositoryTips is selected
+        followStructureRadio = JRadioButton("遵循目录结构")
+        notFollowStructureRadio = JRadioButton("未遵循目录结构")
+        structureGroup = ButtonGroup()
+        structureGroup?.add(followStructureRadio)
+        structureGroup?.add(notFollowStructureRadio)
+        followStructureRadio?.isSelected = true
+
+        // Set initially invisible
+        followStructureRadio?.isVisible = false
+        notFollowStructureRadio?.isVisible = false
+
+        // Place the radios vertically, left-indented, each on its own row
+        gbc.gridy = 11
+        gbc.gridx = 0
+        gbc.gridwidth = GridBagConstraints.REMAINDER
+        gbc.insets = java.awt.Insets(5, 40, 5, 20)
+        contentPanel?.add(followStructureRadio, gbc)
+        gbc.gridy = 12
+        gbc.gridx = 0
+        gbc.gridwidth = GridBagConstraints.REMAINDER
+        gbc.insets = java.awt.Insets(5, 40, 5, 20)
+        contentPanel?.add(notFollowStructureRadio, gbc)
+
+        // Add explanation label, initially invisible
+        val explanationFont = activityTips?.font?.deriveFont(activityTips?.font?.size?.minus(1)?.toFloat() ?: 11f)
+        structureTips = JLabel("<html><i>假如你的DataModule、ServiceModule遵循放在com/gree/module/模块名称/di/的目录下, Repository、Service遵循放在com/gree/module/模块名称/data/repository 和 service目录下，则选择“遵循目录结构”，那么新增文件会放到指定目录，已经存在的文件会自动追加内容；<br/>否则请选择 “未遵循目录结构”，那么除了xml文件，其他文件都会统一以新文件的形式出现，全部放在当前右键点击的文件下，由你自己挪动新文件或者拷贝内容到指定文件的内容中。</i></html>")
+        structureTips?.font = explanationFont
+        structureTips?.isVisible = false
+        gbc.gridy = 13
+        gbc.gridwidth = GridBagConstraints.REMAINDER
+        gbc.insets = java.awt.Insets(5, 40, 10, 20)
+        contentPanel?.add(structureTips, gbc)
+
+        // Add ActionListener to repositoryTips to control visibility
+        repositoryTips?.addActionListener {
+            val visible = repositoryTips?.isSelected == true
+            followStructureRadio?.isVisible = visible
+            notFollowStructureRadio?.isVisible = visible
+            structureTips?.isVisible = visible
+        }
+        // Initialize visibility on first render
+        run {
+            val visible = repositoryTips?.isSelected == true
+            followStructureRadio?.isVisible = visible
+            notFollowStructureRadio?.isVisible = visible
+            structureTips?.isVisible = visible
+        }
+
         // 创建按钮并设置为拉满宽度
         btnCreate = JButton("创建")
-        gbc.gridy = 11
+        // 设置主按钮颜色为蓝色并字体为白色
+        btnCreate?.isContentAreaFilled = true
+        btnCreate?.isOpaque = true
+        btnCreate?.background = java.awt.Color(0, 120, 215)
+        btnCreate?.foreground = java.awt.Color.WHITE
+        gbc.gridy = 14
         gbc.gridwidth = GridBagConstraints.REMAINDER
         gbc.fill = GridBagConstraints.HORIZONTAL
         gbc.insets = java.awt.Insets(10, 30, 5, 30)
@@ -169,7 +229,7 @@ class GenDialog : JDialog(), Configurable {
         errorTips = JLabel("*请输入完整信息!")
         errorTips?.foreground = java.awt.Color.RED
         errorTips?.isVisible = false
-        gbc.gridy = 12
+        gbc.gridy = 15
         gbc.gridwidth = GridBagConstraints.REMAINDER
         gbc.fill = GridBagConstraints.NONE
         gbc.anchor = GridBagConstraints.CENTER
@@ -183,7 +243,7 @@ class GenDialog : JDialog(), Configurable {
         // 设置对话框位置和大小
         val screen = toolkit.screenSize
         val width = screen.width / 3
-        val height = 470
+        val height = 700
         val x = screen.width / 2 - width / 2
         val y = screen.height / 2 - height / 2
         setLocation(x, y)
@@ -203,13 +263,24 @@ class GenDialog : JDialog(), Configurable {
             }
         })
         btnCreate?.addActionListener {
+            val activityText = v_activity?.text
+            val pathText = v_path?.text
+            if (activityText.isNullOrBlank() || pathText.isNullOrBlank()) {
+                errorTips?.text = "*请输入名称和路由地址!"
+                errorTips?.foreground = java.awt.Color.RED
+                errorTips?.isVisible = true
+                return@addActionListener
+            } else {
+                errorTips?.isVisible = false
+            }
             try {
                 closeListener?.onFinished(
-                        v_activity?.text ?: "",
-                        v_path?.text ?: "",
-                        repositoryTips?.isSelected ?: true,
-                        composeOrTraditionalComposeRadio?.isSelected ?: true,
-                        composeTypePageRadio?.isSelected ?: true
+                    activityText ?: "",
+                    pathText ?: "",
+                    repositoryTips?.isSelected ?: true,
+                    composeOrTraditionalComposeRadio?.isSelected ?: true,
+                    composeTypePageRadio?.isSelected ?: true,
+                    followStructureRadio?.isSelected ?: true
                 )
             } finally {
                 onCancel()

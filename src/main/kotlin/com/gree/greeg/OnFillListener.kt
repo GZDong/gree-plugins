@@ -5,5 +5,12 @@ package com.gree.greeg
  * @Date 2023/7/3
  */
 interface OnFillListener {
-    fun onFinished(tempActivityName: String, tempPath: String, chooseRep: Boolean, isComposeVersion: Boolean, isPageSelected: Boolean)
+    fun onFinished(
+            tempActivityName: String,
+            tempPath: String,
+            chooseRep: Boolean,
+            isComposeVersion: Boolean,
+            isPageSelected: Boolean,
+            followStructure: Boolean
+    )
 }
