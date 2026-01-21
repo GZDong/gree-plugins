@@ -11,12 +11,21 @@ import com.gree.comp_page_annotations.CompPage
     route = "${ROUTER_PATH}"
 )
 
-@Preview(showBackground = true)
 @Composable
 fun ${INPUT_NAME}Page() {
-    SetupScreen<${INPUT_NAME}ViewModel, ${INPUT_NAME}UiState>(
-        title = "input your title"
-    ) { vm, state ->
-
+    SetupScreen<${INPUT_NAME}ViewModel, ${INPUT_NAME}UiState, ${INPUT_NAME}Actions>(
+        title = "input your title",
+        actionsFactory = { vm -> ${INPUT_NAME}ActionsImpl(vm) }
+    ) { state, actions ->
+        PageContent(state, actions)
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun PageContent(
+    uiState: ${INPUT_NAME}UiState = ${INPUT_NAME}UiState(),
+    action: ${INPUT_NAME}Actions = object : ${INPUT_NAME}Actions {}
+) {
+
 }

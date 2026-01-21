@@ -1,0 +1,25 @@
+package ${PACKAGE_NAME}
+
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.Stable
+import com.gree.android.develop.mvvm.compose.Action
+import com.gree.android.develop.mvvm.compose.UiState
+
+#parse("File Header.java")
+
+@Immutable
+data class ${INPUT_NAME}UiState(
+
+) : UiState
+
+@Stable
+interface ${INPUT_NAME}Actions : Action {
+
+}
+
+@Stable
+class ${INPUT_NAME}ActionsImpl(
+    private val vm: ${INPUT_NAME}ViewModel
+) : ${INPUT_NAME}Actions {
+
+}

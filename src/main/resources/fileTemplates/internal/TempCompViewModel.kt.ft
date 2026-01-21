@@ -1,17 +1,10 @@
 package ${PACKAGE_NAME}
 
 import com.gree.android.develop.mvvm.compose.CompBaseViewModel
-import androidx.compose.runtime.Immutable
-import com.gree.android.develop.mvvm.compose.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
 #parse("File Header.java")
-
-@Immutable
-data class ${INPUT_NAME}UiState(
-
-) : UiState
 
 @HiltViewModel
 class ${INPUT_NAME}ViewModel @Inject constructor() : CompBaseViewModel<${INPUT_NAME}UiState>(${INPUT_NAME}UiState()) {

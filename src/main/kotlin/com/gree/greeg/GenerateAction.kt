@@ -394,11 +394,13 @@ class GenerateAction(handler: CodeInsightActionHandler? = null) : BaseGenerateAc
                             }
                             createTempCode(viewModelTemp, "$vmName.kt", targetDir, viewModelProperties)
 
-                            val uiStateName = baseName + "UiState"
-                            val uiStateProperties = Properties()
-                            uiStateProperties["INPUT_NAME"] = uiStateName
-                            val uiStateTemp = FileTemplateManager.getInstance(this).getInternalTemplate("TempCompUiState")
-                            createTempCode(uiStateTemp, "$uiStateName.kt", targetDir, uiStateProperties)
+                            // UiModel (Compose)
+                            val uiModelName = baseName + "UiModel"
+                            val uiModelProperties = Properties()
+                            uiModelProperties["INPUT_NAME"] = baseName
+                            val uiModelTemp = FileTemplateManager.getInstance(this)
+                                .getInternalTemplate("TempCompUiModel")
+                            createTempCode(uiModelTemp, "$uiModelName.kt", targetDir, uiModelProperties)
                         } else {
                             // Compose Activity (旧逻辑，不生成 UiState)
                             val vmName = baseName + "ViewModel"
@@ -417,6 +419,14 @@ class GenerateAction(handler: CodeInsightActionHandler? = null) : BaseGenerateAc
                                 viewModelProperties["INPUT_NAME_PARAM"] = subModelName
                             }
                             createTempCode(viewModelTemp, "$vmName.kt", targetDir, viewModelProperties)
+
+                            // UiModel (Compose)
+                            val uiModelName = baseName + "UiModel"
+                            val uiModelProperties = Properties()
+                            uiModelProperties["INPUT_NAME"] = baseName
+                            val uiModelTemp = FileTemplateManager.getInstance(this)
+                                .getInternalTemplate("TempCompUiModel")
+                            createTempCode(uiModelTemp, "$uiModelName.kt", targetDir, uiModelProperties)
                         }
                     } else {
                         // 传统 Activity (旧逻辑)

@@ -15,16 +15,20 @@ class ${INPUT_NAME}Activity : CompBaseActivity() {
 
     @Composable
     override fun BuildContent() {
-        SetupScreen<${INPUT_NAME}ViewModel, ${INPUT_NAME}UiState>(
-            title = "input your title"
-        ) { vm, state ->
-            PageContent(state)
+        SetupScreen<${INPUT_NAME}ViewModel, ${INPUT_NAME}UiState, ${INPUT_NAME}Actions>(
+            title = "input your title",
+            actionsFactory = { vm -> ${INPUT_NAME}ActionsImpl(vm) }
+        ) { state, actions ->
+            PageContent(state, actions)
         }
     }
 }
 
 @Preview(showBackground = true)
 @Composable
-fun PageContent(uiState: ${INPUT_NAME}UiState = ${INPUT_NAME}UiState()) {
+fun PageContent(
+    uiState: ${INPUT_NAME}UiState = ${INPUT_NAME}UiState(),
+    action: ${INPUT_NAME}Actions = object : ${INPUT_NAME}Actions {}
+) {
 
 }

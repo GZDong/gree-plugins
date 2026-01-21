@@ -5,9 +5,9 @@ plugins {
 }
 
 group = "com.gree"
-version = "1.1.7"
+version = "1.1.8"
 
-description = "解决目录结构不统一，依旧选择生成的问题"
+description = "新增Compose的UiMode生成"
 
 repositories {
     maven { url = uri("https://maven.aliyun.com/repository/public") }
